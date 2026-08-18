@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Washing Machine - Daily Overtime Form</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --navy:#122A4E;
+    --navy-dark:#0B1D38;
+    --navy-mid:#25436F;
+    --blue-accent:#2E6BD6;
+    --gray-bg:#F2F4F7;
+    --gray-line:#DDE2E8;
+    --gray-text:#5B6472;
+    --text:#1C2530;
+    --white:#FFFFFF;
+    --danger:#C0392B;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--gray-bg);
+    color:var(--text);
+    -webkit-tap-highlight-color:transparent;
+    padding-bottom:110px;
+  }
+  header.top{
+    background:var(--navy);
+    color:var(--white);
+    padding:18px 16px 16px;
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  header.top .eyebrow{
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:#9FB4D8;
+    font-weight:600;
+    margin:0 0 2px;
+  }
+  header.top h1{
+    font-size:20px;
+    margin:0 0 14px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  nav.tabs{
+    display:flex;
+    background:var(--navy-dark);
+    border-radius:8px;
+    padding:3px;
+    gap:3px;
+  }
+  nav.tabs button{
+    flex:1;
+    border:none;
+    background:transparent;
+    color:#B9C6DA;
+    font-size:13.5px;
+    font-weight:600;
+    padding:9px 8px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  nav.tabs button.active{
+    background:var(--white);
+    color:var(--navy);
+  }
+  main{
+    max-width:760px;
+    margin:0 auto;
+    padding:16px;
+  }
+  .banner-warn{
+    background:#FFF4E5;
+    border:1px solid #F0C36D;
+    color:#8A5A00;
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:13px;
+    margin-bottom:14px;
+    line-height:1.5;
+  }
+  .card{
+    background:var(--white);
+    border:1px solid var(--gray-line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .field{
+    margin-bottom:14px;
+  }
+  .field:last-child{margin-bottom:0;}
+  label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--gray-text);
+    margin-bottom:6px;
+  }
+  label .req{color:var(--danger);}
+  input[type=text],input[type=number],input[type=date],select,textarea{
+    width:100%;
+    font-size:15px;
+    padding:11px 12px;
+    border:1px solid var(--gray-line);
+    border-radius:8px;
+    background:var(--white);
+    color:var(--text);
+    font-family:inherit;
+  }
+  input:focus,select:focus,textarea:focus{
+    outline:none;
+    border-color:var(--blue-accent);
+    box-shadow:0 0 0 3px rgba(46,107,214,.12);
+  }
+  .row-2{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  @media(min-width:640px){
+    .row-2{grid-template-columns:1fr 1fr;}
+  }
+  .section-title{
+    font-size:14px;
+    font-weight:700;
+    color:var(--navy);
+    margin:22px 0 10px;
+    letter-spacing:.01em;
+  }
+  .emp-header-row{
+    display:none;
+    grid-template-columns:2fr 1.2fr 1fr 1.6fr 34px;
+    gap:10px;
+    padding:0 4px 8px;
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--gray-text);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  @media(min-width:768px){
+    .emp-header-row{display:grid;}
+  }
+  .emp-row{
+    background:var(--white);
+    border:1px solid var(--gray-line);
+    border-radius:var(--radius);
+    padding:14px;
+    margin-bottom:10px;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+    position:relative;
+  }
+  @media(min-width:768px){
+    .emp-row{
+      grid-template-columns:2fr 1.2fr 1fr 1.6fr 34px;
+      align-items:center;
+      padding:10px 14px;
+    }
+    .emp-row .field{margin-bottom:0;}
+    .emp-row label{display:none;}
+  }
+  .emp-row .emp-badge{
+    font-size:12px;
+    font-weight:700;
+    color:var(--navy);
+    margin-bottom:2px;
+  }
+  @media(min-width:768px){
+    .emp-row .emp-badge{display:none;}
+  }
+  .remove-btn{
+    border:none;
+    background:#FBEAE8;
+    color:var(--danger);
+    width:34px;
+    height:34px;
+    border-radius:8px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    justify-self:end;
+  }
+  .remove-btn:disabled{
+    opacity:.35;
+    cursor:not-allowed;
+  }
+  .add-btn{
+    width:100%;
+    background:var(--white);
+    border:1.5px dashed #9CB2CE;
+    color:var(--navy-mid);
+    font-weight:700;
+    font-size:14.5px;
+    padding:13px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    margin-top:4px;
+  }
+  .add-btn:active{background:#EAF0FA;}
+  .footer-bar{
+    position:fixed;
+    bottom:0;left:0;right:0;
+    background:var(--white);
+    border-top:1px solid var(--gray-line);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    z-index:20;
+  }
+  .footer-inner{
+    max-width:760px;
+    margin:0 auto;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .totals{
+    flex:1;
+    font-size:12.5px;
+    color:var(--gray-text);
+    line-height:1.4;
+  }
+  .totals b{color:var(--text);font-size:14px;}
+  .btn-primary{
+    background:var(--navy);
+    color:var(--white);
+    border:none;
+    font-size:14.5px;
+    font-weight:700;
+    padding:13px 20px;
+    border-radius:9px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn-primary:disabled{opacity:.45;cursor:not-allowed;}
+  .btn-secondary{
+    background:var(--white);
+    color:var(--navy);
+    border:1px solid var(--gray-line);
+    font-size:14px;
+    font-weight:600;
+    padding:11px 16px;
+    border-radius:9px;
+    cursor:pointer;
+  }
+  .filters{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  @media(min-width:640px){
+    .filters{grid-template-columns:1fr 1fr 1fr auto;align-items:end;}
+  }
+  .summary-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .summary-box{
+    background:var(--white);
+    border:1px solid var(--gray-line);
+    border-radius:var(--radius);
+    padding:14px;
+  }
+  .summary-box .label{
+    font-size:11.5px;
+    color:var(--gray-text);
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  .summary-box .value{
+    font-size:22px;
+    font-weight:800;
+    color:var(--navy);
+    margin-top:4px;
+  }
+  .dept-breakdown{
+    background:var(--white);
+    border:1px solid var(--gray-line);
+    border-radius:var(--radius);
+    padding:14px;
+    margin-bottom:14px;
+    font-size:13.5px;
+  }
+  .dept-breakdown .row{
+    display:flex;
+    justify-content:space-between;
+    padding:6px 0;
+    border-bottom:1px solid var(--gray-line);
+  }
+  .dept-breakdown .row:last-child{border-bottom:none;}
+  table.data-table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--white);
+    border:1px solid var(--gray-line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    font-size:13px;
+  }
+  table.data-table th{
+    background:var(--gray-bg);
+    text-align:left;
+    padding:9px 10px;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--gray-text);
+    border-bottom:1px solid var(--gray-line);
+    white-space:nowrap;
+  }
+  table.data-table td{
+    padding:9px 10px;
+    border-bottom:1px solid var(--gray-line);
+    white-space:nowrap;
+  }
+  table.data-table tr:last-child td{border-bottom:none;}
+  .table-scroll{overflow-x:auto;border-radius:var(--radius);}
+  .empty-state{
+    text-align:center;
+    padding:30px 16px;
+    color:var(--gray-text);
+    font-size:13.5px;
+  }
+  .download-bar{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:12px;
+  }
+  /* Toast */
+  #toast{
+    position:fixed;
+    left:16px;right:16px;
+    bottom:110px;
+    background:var(--navy-dark);
+    color:var(--white);
+    padding:13px 16px;
+    border-radius:9px;
+    font-size:13.5px;
+    text-align:center;
+    z-index:50;
+    display:none;
+    box-shadow:0 6px 20px rgba(0,0,0,.2);
+  }
+  /* Modal */
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(11,29,56,.5);
+    display:none;
+    align-items:center;justify-content:center;
+    z-index:60;
+    padding:20px;
+  }
+  .modal-box{
+    background:var(--white);
+    border-radius:12px;
+    padding:22px 20px;
+    max-width:340px;
+    width:100%;
+    text-align:center;
+  }
+  .modal-box p{
+    font-size:14.5px;
+    line-height:1.5;
+    margin:0 0 18px;
+    color:var(--text);
+  }
+  .modal-actions{
+    display:flex;
+    gap:10px;
+  }
+  .modal-actions button{flex:1;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <p class="eyebrow">Washing Machine</p>
+  <h1>Daily Overtime Form</h1>
+  <nav class="tabs">
+    <button id="tabLeaderBtn" class="active">Input Lembur</button>
+    <button id="tabAdminBtn">Data Admin</button>
+  </nav>
+</header>
+
+<main>
+  <div id="configWarning" class="banner-warn hidden">
+    ⚠️ Supabase belum dikonfigurasi. Buka file ini, isi <b>SUPABASE_URL</b> dan <b>SUPABASE_ANON_KEY</b> di bagian atas kode &lt;script&gt;, lalu simpan ulang.
+  </div>
+
+  <!-- LEADER VIEW -->
+  <section id="leaderView">
+    <div class="card">
+      <div class="row-2">
+        <div class="field">
+          <label>Date <span class="req">*</span></label>
+          <input type="date" id="dateInput">
+        </div>
+        <div class="field">
+          <label>Department <span class="req">*</span></label>
+          <select id="departmentInput">
+            <option value="">Pilih Department</option>
+            <option>Production</option>
+            <option>Part Control</option>
+            <option>CMC</option>
+            <option>Engineering</option>
+            <option>PE</option>
+            <option>Maintenance</option>
+            <option>PQA Incoming</option>
+            <option>PQA Outgoing</option>
+            <option>Main Office</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <p class="section-title">Employee Overtime</p>
+    <div class="emp-header-row">
+      <span>Nama</span><span>NPK</span><span>Overtime</span><span>Remark</span><span></span>
+    </div>
+    <div id="employeeList"></div>
+    <button class="add-btn" id="addEmployeeBtn">+ Tambah Karyawan</button>
+  </section>
+
+  <!-- ADMIN VIEW -->
+  <section id="adminView" class="hidden">
+    <div class="filters">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="filterDate">
+      </div>
+      <div class="field">
+        <label>Department</label>
+        <select id="filterDepartment">
+          <option value="">Semua Department</option>
+          <option>Production</option>
+          <option>Part Control</option>
+          <option>CMC</option>
+          <option>Engineering</option>
+          <option>PE</option>
+          <option>Maintenance</option>
+          <option>PQA Incoming</option>
+          <option>PQA Outgoing</option>
+          <option>Main Office</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Search Nama / NPK</label>
+        <input type="text" id="filterSearch" placeholder="Cari...">
+      </div>
+      <div class="field">
+        <button class="btn-secondary" id="refreshBtn" style="width:100%;">Refresh</button>
+      </div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-box">
+        <div class="label">Total Employee</div>
+        <div class="value" id="sumEmployee">0</div>
+      </div>
+      <div class="summary-box">
+        <div class="label">Total Overtime</div>
+        <div class="value" id="sumHours">0 Hours</div>
+      </div>
+    </div>
+
+    <div class="dept-breakdown" id="deptBreakdown"></div>
+
+    <div class="download-bar">
+      <button class="btn-primary" id="downloadBtn">Download Excel</button>
+    </div>
+
+    <div class="table-scroll">
+      <table class="data-table" id="dataTable">
+        <thead>
+          <tr>
+            <th>No</th><th>Date</th><th>Department</th><th>Nama</th>
+            <th>NPK</th><th>Overtime</th><th>Remark</th><th>Submitted</th>
+          </tr>
+        </thead>
+        <tbody id="dataTableBody"></tbody>
+      </table>
+    </div>
+    <div id="adminEmpty" class="empty-state hidden">Tidak ada data untuk filter ini.</div>
+  </section>
+</main>
+
+<div class="footer-bar" id="footerBar">
+  <div class="footer-inner">
+    <div class="totals">
+      Total Employee: <b id="totalEmployee">0</b><br>
+      Total Overtime: <b id="totalHour">0</b> Hour
+    </div>
+    <button class="btn-primary" id="submitBtn">Submit Overtime</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <p id="confirmText"></p>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelSubmit">Cancel</button>
+      <button class="btn-primary" id="confirmSubmit">Submit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   KONFIGURASI SUPABASE - ISI SEBELUM DIGUNAKAN
+   1. Buat project di https://supabase.com
+   2. Jalankan SQL berikut di SQL Editor Supabase:
+
+   create table overtime_records (
+     id bigint generated always as identity primary key,
+     overtime_date date not null,
+     department text not null,
+     name text not null,
+     npk text,
+     overtime_hour numeric not null,
+     remark text,
+     submitted_at timestamptz not null default now()
+   );
+
+   alter table overtime_records enable row level security;
+
+   create policy "public insert" on overtime_records
+     for insert to anon with check (true);
+
+   create policy "public select" on overtime_records
+     for select to anon using (true);
+
+   3. Salin Project URL dan anon public key dari Settings > API,
+      lalu isi dua variabel di bawah ini.
+========================================================= */
+const SUPABASE_URL = "https://smqumoyvrouxhwxznhsu.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtcXVtb3l2cm91eGh3eHpuaHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMTYzODMsImV4cCI6MjEwMjU5MjM4M30.QgYCu1AIj5Jdr-RS1NOO_aPfj8QA3TAvfdqP8Drpv30";
+
+const isConfigured = SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY";
+const sb = isConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+const DEPARTMENTS = ["Production","Part Control","CMC","Engineering","PE","Maintenance","PQA Incoming","PQA Outgoing","Main Office"];
+
+/* ---------- State ---------- */
+let employees = [];
+let empSeq = 0;
+
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function fmtDateDisplay(iso){
+  if(!iso) return "";
+  const [y,m,d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+function fmtDateTime(ts){
+  const d = new Date(ts);
+  return fmtDateDisplay(d.toISOString().slice(0,10)) + " " + String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+}
+
+/* ---------- Tabs ---------- */
+const tabLeaderBtn = document.getElementById("tabLeaderBtn");
+const tabAdminBtn = document.getElementById("tabAdminBtn");
+const leaderView = document.getElementById("leaderView");
+const adminView = document.getElementById("adminView");
+const footerBar = document.getElementById("footerBar");
+
+tabLeaderBtn.onclick = () => switchTab("leader");
+tabAdminBtn.onclick = () => switchTab("admin");
+
+function switchTab(tab){
+  const isLeader = tab === "leader";
+  tabLeaderBtn.classList.toggle("active", isLeader);
+  tabAdminBtn.classList.toggle("active", !isLeader);
+  leaderView.classList.toggle("hidden", !isLeader);
+  adminView.classList.toggle("hidden", isLeader);
+  footerBar.classList.toggle("hidden", !isLeader);
+  if(!isLeader) loadAdminData();
+}
+
+/* ---------- Leader: employee rows ---------- */
+const employeeList = document.getElementById("employeeList");
+const dateInput = document.getElementById("dateInput");
+const departmentInput = document.getElementById("departmentInput");
+
+dateInput.value = todayISO();
+
+function addEmployee(){
+  empSeq++;
+  employees.push({ uid: empSeq, name:"", npk:"", overtime:"", remark:"" });
+  renderEmployees();
+}
+
+function removeEmployee(uid){
+  if(employees.length <= 1) return;
+  employees = employees.filter(e => e.uid !== uid);
+  renderEmployees();
+}
+
+function renderEmployees(){
+  employeeList.innerHTML = "";
+  employees.forEach((emp, idx) => {
+    const row = document.createElement("div");
+    row.className = "emp-row";
+    row.innerHTML = `
+      <div class="emp-badge">Employee ${idx+1}</div>
+      <div class="field">
+        <label>Nama <span class="req">*</span></label>
+        <input type="text" placeholder="Nama karyawan" data-field="name" value="${escapeHtml(emp.name)}">
+      </div>
+      <div class="field">
+        <label>NPK</label>
+        <input type="text" placeholder="Opsional" data-field="npk" value="${escapeHtml(emp.npk)}">
+      </div>
+      <div class="field">
+        <label>Overtime Hour <span class="req">*</span></label>
+        <input type="number" min="0" step="0.5" placeholder="Jam" data-field="overtime" value="${escapeHtml(emp.overtime)}">
+      </div>
+      <div class="field">
+        <label>Remark</label>
+        <input type="text" placeholder="Opsional" data-field="remark" value="${escapeHtml(emp.remark)}">
+      </div>
+      <button class="remove-btn" ${employees.length<=1 ? "disabled":""} title="Hapus">&times;</button>
+    `;
+    row.querySelectorAll("input").forEach(inp => {
+      inp.addEventListener("input", () => {
+        emp[inp.dataset.field] = inp.value;
+        updateTotals();
+      });
+    });
+    row.querySelector(".remove-btn").addEventListener("click", () => removeEmployee(emp.uid));
+    employeeList.appendChild(row);
+  });
+  updateTotals();
+}
+
+function escapeHtml(str){
+  return (str ?? "").toString().replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function updateTotals(){
+  const totalEmployee = employees.length;
+  const totalHour = employees.reduce((sum,e) => sum + (parseFloat(e.overtime) || 0), 0);
+  document.getElementById("totalEmployee").textContent = totalEmployee;
+  document.getElementById("totalHour").textContent = totalHour;
+}
+
+document.getElementById("addEmployeeBtn").onclick = addEmployee;
+addEmployee();
+
+/* ---------- Submit ---------- */
+const submitBtn = document.getElementById("submitBtn");
+const confirmModal = document.getElementById("confirmModal");
+const confirmText = document.getElementById("confirmText");
+
+submitBtn.onclick = () => {
+  if(!isConfigured){ showToast("Supabase belum dikonfigurasi."); return; }
+  if(!dateInput.value){ showToast("Date wajib diisi."); return; }
+  if(!departmentInput.value){ showToast("Department wajib diisi."); return; }
+  for(const e of employees){
+    if(!e.name.trim()){ showToast("Nama wajib diisi untuk semua karyawan."); return; }
+    if(e.overtime === "" || isNaN(parseFloat(e.overtime)) || parseFloat(e.overtime) <= 0){
+      showToast("Overtime Hour wajib diisi dengan angka > 0.");
+      return;
+    }
+  }
+  const totalEmployee = employees.length;
+  const totalHour = employees.reduce((sum,e) => sum + (parseFloat(e.overtime) || 0), 0);
+  confirmText.textContent = `Submit ${totalEmployee} employee dengan total ${totalHour} jam overtime?`;
+  confirmModal.style.display = "flex";
+};
+
+document.getElementById("cancelSubmit").onclick = () => confirmModal.style.display = "none";
+
+document.getElementById("confirmSubmit").onclick = async () => {
+  confirmModal.style.display = "none";
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Menyimpan...";
+  try{
+    const payload = employees.map(e => ({
+      overtime_date: dateInput.value,
+      department: departmentInput.value,
+      name: e.name.trim(),
+      npk: e.npk.trim() || null,
+      overtime_hour: parseFloat(e.overtime),
+      remark: e.remark.trim() || null
+    }));
+    const { error } = await sb.from("overtime_records").insert(payload);
+    if(error) throw error;
+    const totalEmployee = payload.length;
+    const totalHour = payload.reduce((s,e)=>s+e.overtime_hour,0);
+    showToast(`Data overtime berhasil disimpan. ${totalEmployee} employee, total ${totalHour} overtime hours.`, 3500);
+    employees = [];
+    addEmployee();
+    departmentInput.value = "";
+  }catch(err){
+    console.error(err);
+    showToast("Gagal menyimpan data: " + err.message);
+  }finally{
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Submit Overtime";
+  }
+};
+
+/* ---------- Toast ---------- */
+let toastTimer = null;
+function showToast(msg, duration=2500){
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.style.display = "block";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.style.display = "none"; }, duration);
+}
+
+/* ---------- Admin ---------- */
+const filterDate = document.getElementById("filterDate");
+const filterDepartment = document.getElementById("filterDepartment");
+const filterSearch = document.getElementById("filterSearch");
+filterDate.value = todayISO();
+
+document.getElementById("refreshBtn").onclick = loadAdminData;
+filterDate.addEventListener("change", loadAdminData);
+filterDepartment.addEventListener("change", loadAdminData);
+filterSearch.addEventListener("input", debounce(loadAdminData, 300));
+
+function debounce(fn, ms){
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+let currentRecords = [];
+
+async function loadAdminData(){
+  if(!isConfigured) return;
+  try{
+    let query = sb.from("overtime_records").select("*").order("submitted_at", { ascending:false });
+    if(filterDate.value) query = query.eq("overtime_date", filterDate.value);
+    if(filterDepartment.value) query = query.eq("department", filterDepartment.value);
+    const { data, error } = await query;
+    if(error) throw error;
+    let rows = data || [];
+    const search = filterSearch.value.trim().toLowerCase();
+    if(search){
+      rows = rows.filter(r =>
+        (r.name || "").toLowerCase().includes(search) ||
+        (r.npk || "").toLowerCase().includes(search)
+      );
+    }
+    currentRecords = rows;
+    renderAdminTable(rows);
+    renderAdminSummary(rows);
+  }catch(err){
+    console.error(err);
+    showToast("Gagal memuat data: " + err.message);
+  }
+}
+
+function renderAdminTable(rows){
+  const tbody = document.getElementById("dataTableBody");
+  const emptyState = document.getElementById("adminEmpty");
+  tbody.innerHTML = "";
+  if(rows.length === 0){
+    emptyState.classList.remove("hidden");
+    document.getElementById("dataTable").classList.add("hidden");
+    return;
+  }
+  emptyState.classList.add("hidden");
+  document.getElementById("dataTable").classList.remove("hidden");
+  rows.forEach((r, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${idx+1}</td>
+      <td>${fmtDateDisplay(r.overtime_date)}</td>
+      <td>${escapeHtml(r.department)}</td>
+      <td>${escapeHtml(r.name)}</td>
+      <td>${escapeHtml(r.npk || "-")}</td>
+      <td>${r.overtime_hour}</td>
+      <td>${escapeHtml(r.remark || "-")}</td>
+      <td>${fmtDateTime(r.submitted_at)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderAdminSummary(rows){
+  const totalEmployee = rows.length;
+  const totalHours = rows.reduce((s,r) => s + Number(r.overtime_hour || 0), 0);
+  document.getElementById("sumEmployee").textContent = totalEmployee;
+  document.getElementById("sumHours").textContent = totalHours + " Hours";
+
+  const byDept = {};
+  rows.forEach(r => {
+    byDept[r.department] = (byDept[r.department] || 0) + Number(r.overtime_hour || 0);
+  });
+  const breakdown = document.getElementById("deptBreakdown");
+  const entries = Object.entries(byDept).sort((a,b) => b[1]-a[1]);
+  breakdown.innerHTML = entries.length
+    ? entries.map(([dept,hrs]) => `<div class="row"><span>${escapeHtml(dept)}</span><b>${hrs} Hours</b></div>`).join("")
+    : `<div class="row"><span>Tidak ada data</span></div>`;
+}
+
+/* ---------- Download Excel ---------- */
+document.getElementById("downloadBtn").onclick = () => {
+  if(currentRecords.length === 0){
+    showToast("Tidak ada data untuk didownload.");
+    return;
+  }
+  const exportRows = currentRecords.map(r => ({
+    Date: fmtDateDisplay(r.overtime_date),
+    Department: r.department,
+    Nama: r.name,
+    NPK: r.npk || "",
+    "Overtime Hour": r.overtime_hour,
+    Remark: r.remark || ""
+  }));
+  const ws = XLSX.utils.json_to_sheet(exportRows);
+  ws["!cols"] = [{wch:12},{wch:16},{wch:20},{wch:12},{wch:14},{wch:28}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Overtime");
+  const label = filterDate.value ? filterDate.value : "all";
+  XLSX.writeFile(wb, `overtime_${label}.xlsx`);
+};
+
+/* ---------- Init ---------- */
+if(!isConfigured){
+  document.getElementById("configWarning").classList.remove("hidden");
+  submitBtn.disabled = true;
+}
+</script>
+</body>
+</html>
