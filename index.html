@@ -8,119 +8,119 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
-    --navy:#122A4E;
-    --navy-dark:#0B1D38;
-    --navy-mid:#25436F;
-    --blue-accent:#2E6BD6;
-    --gray-bg:#F2F4F7;
-    --gray-line:#DDE2E8;
-    --gray-text:#5B6472;
-    --text:#1C2530;
-    --white:#FFFFFF;
-    --danger:#C0392B;
-    --radius:10px;
+    --bg:#121319;
+    --bg-elevated:#191B24;
+    --surface:#1E212D;
+    --surface-alt:#262A3A;
+    --border:#2C2F40;
+    --text:#F4F5F9;
+    --text-muted:#8B8FA3;
+    --text-faint:#5B5F72;
+    --coral:#FF6B5B;
+    --coral-dark:#E85A49;
+    --blue:#4C8EFF;
+    --green:#34D399;
+    --yellow:#FBBF24;
+    --purple:#A78BFA;
+    --pink:#F472B6;
+    --danger:#FF6B6B;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:10px;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--gray-bg);
+    background:var(--bg);
     color:var(--text);
     -webkit-tap-highlight-color:transparent;
-    padding-bottom:110px;
   }
+  body.tab-leader{padding-bottom:96px;}
+  body.tab-admin{padding-bottom:96px;}
+
   header.top{
-    background:var(--navy);
-    color:var(--white);
-    padding:18px 16px 16px;
+    background:var(--bg-elevated);
+    padding:20px 18px 16px;
     position:sticky;
     top:0;
     z-index:20;
+    border-bottom:1px solid var(--border);
   }
   header.top .eyebrow{
     font-size:11px;
-    letter-spacing:.12em;
+    letter-spacing:.14em;
     text-transform:uppercase;
-    color:#9FB4D8;
-    font-weight:600;
-    margin:0 0 2px;
+    color:var(--coral);
+    font-weight:700;
+    margin:0 0 4px;
   }
   header.top h1{
-    font-size:20px;
-    margin:0 0 14px;
-    font-weight:700;
+    font-size:21px;
+    margin:0;
+    font-weight:800;
     letter-spacing:-0.01em;
+    color:var(--text);
   }
-  nav.tabs{
-    display:flex;
-    background:var(--navy-dark);
-    border-radius:8px;
-    padding:3px;
-    gap:3px;
-  }
-  nav.tabs button{
-    flex:1;
-    border:none;
-    background:transparent;
-    color:#B9C6DA;
-    font-size:13.5px;
-    font-weight:600;
-    padding:9px 8px;
-    border-radius:6px;
-    cursor:pointer;
-  }
-  nav.tabs button.active{
-    background:var(--white);
-    color:var(--navy);
-  }
+
   main{
     max-width:760px;
     margin:0 auto;
-    padding:16px;
+    padding:18px 16px 8px;
   }
+
   .banner-warn{
-    background:#FFF4E5;
-    border:1px solid #F0C36D;
-    color:#8A5A00;
-    padding:10px 12px;
-    border-radius:8px;
+    background:rgba(251,191,36,.1);
+    border:1px solid rgba(251,191,36,.35);
+    color:var(--yellow);
+    padding:11px 13px;
+    border-radius:var(--radius-sm);
     font-size:13px;
     margin-bottom:14px;
     line-height:1.5;
   }
+
   .card{
-    background:var(--white);
-    border:1px solid var(--gray-line);
-    border-radius:var(--radius);
-    padding:16px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:18px;
     margin-bottom:14px;
   }
-  .field{
-    margin-bottom:14px;
-  }
+  .field{margin-bottom:14px;}
   .field:last-child{margin-bottom:0;}
   label{
     display:block;
-    font-size:12.5px;
+    font-size:12px;
     font-weight:600;
-    color:var(--gray-text);
-    margin-bottom:6px;
+    color:var(--text-muted);
+    margin-bottom:7px;
+    letter-spacing:.01em;
   }
-  label .req{color:var(--danger);}
-  input[type=text],input[type=number],input[type=date],select,textarea{
+  label .req{color:var(--coral);}
+  input[type=text],input[type=number],input[type=date],input[type=password],select,textarea{
     width:100%;
     font-size:15px;
-    padding:11px 12px;
-    border:1px solid var(--gray-line);
-    border-radius:8px;
-    background:var(--white);
+    padding:12px 13px;
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    background:var(--surface-alt);
     color:var(--text);
     font-family:inherit;
   }
+  input::placeholder{color:var(--text-faint);}
   input:focus,select:focus,textarea:focus{
     outline:none;
-    border-color:var(--blue-accent);
-    box-shadow:0 0 0 3px rgba(46,107,214,.12);
+    border-color:var(--coral);
+    box-shadow:0 0 0 3px rgba(255,107,91,.16);
+  }
+  select{
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238B8FA3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 13px center;
+    padding-right:36px;
   }
   .row-2{
     display:grid;
@@ -130,32 +130,37 @@
   @media(min-width:640px){
     .row-2{grid-template-columns:1fr 1fr;}
   }
+
   .section-title{
-    font-size:14px;
+    font-size:13.5px;
     font-weight:700;
-    color:var(--navy);
-    margin:22px 0 10px;
-    letter-spacing:.01em;
+    color:var(--text-muted);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    margin:22px 2px 10px;
   }
+
   .emp-header-row{
     display:none;
     grid-template-columns:2fr 1.2fr 1fr 1.6fr 34px;
     gap:10px;
     padding:0 4px 8px;
-    font-size:11.5px;
+    font-size:11px;
     font-weight:700;
-    color:var(--gray-text);
+    color:var(--text-faint);
     text-transform:uppercase;
-    letter-spacing:.04em;
+    letter-spacing:.05em;
   }
   @media(min-width:768px){
     .emp-header-row{display:grid;}
   }
+
   .emp-row{
-    background:var(--white);
-    border:1px solid var(--gray-line);
-    border-radius:var(--radius);
-    padding:14px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:4px solid var(--coral);
+    border-radius:var(--radius-md);
+    padding:15px 15px 15px 13px;
     margin-bottom:10px;
     display:grid;
     grid-template-columns:1fr;
@@ -166,7 +171,7 @@
     .emp-row{
       grid-template-columns:2fr 1.2fr 1fr 1.6fr 34px;
       align-items:center;
-      padding:10px 14px;
+      padding:12px 14px 12px 12px;
     }
     .emp-row .field{margin-bottom:0;}
     .emp-row label{display:none;}
@@ -174,7 +179,7 @@
   .emp-row .emp-badge{
     font-size:12px;
     font-weight:700;
-    color:var(--navy);
+    color:var(--coral);
     margin-bottom:2px;
   }
   @media(min-width:768px){
@@ -182,77 +187,85 @@
   }
   .remove-btn{
     border:none;
-    background:#FBEAE8;
+    background:rgba(255,107,107,.14);
     color:var(--danger);
     width:34px;
     height:34px;
-    border-radius:8px;
-    font-size:16px;
+    border-radius:9px;
+    font-size:17px;
     font-weight:700;
     cursor:pointer;
     justify-self:end;
   }
-  .remove-btn:disabled{
-    opacity:.35;
-    cursor:not-allowed;
-  }
+  .remove-btn:disabled{opacity:.3;cursor:not-allowed;}
+
   .add-btn{
     width:100%;
-    background:var(--white);
-    border:1.5px dashed #9CB2CE;
-    color:var(--navy-mid);
+    background:transparent;
+    border:1.5px dashed #454A60;
+    color:var(--text-muted);
     font-weight:700;
     font-size:14.5px;
-    padding:13px;
-    border-radius:var(--radius);
+    padding:14px;
+    border-radius:var(--radius-md);
     cursor:pointer;
     margin-top:4px;
   }
-  .add-btn:active{background:#EAF0FA;}
-  .footer-bar{
-    position:fixed;
-    bottom:0;left:0;right:0;
-    background:var(--white);
-    border-top:1px solid var(--gray-line);
-    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
-    z-index:20;
+  .add-btn:active{background:var(--surface-alt);}
+
+  .summary-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:14px;
   }
-  .footer-inner{
-    max-width:760px;
-    margin:0 auto;
-    display:flex;
-    align-items:center;
-    gap:12px;
+  .summary-box{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:16px;
   }
-  .totals{
-    flex:1;
-    font-size:12.5px;
-    color:var(--gray-text);
-    line-height:1.4;
-  }
-  .totals b{color:var(--text);font-size:14px;}
-  .btn-primary{
-    background:var(--navy);
-    color:var(--white);
-    border:none;
-    font-size:14.5px;
+  .summary-box .label{
+    font-size:11px;
+    color:var(--text-muted);
     font-weight:700;
-    padding:13px 20px;
-    border-radius:9px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .summary-box .value{
+    font-size:26px;
+    font-weight:800;
+    color:var(--text);
+    margin-top:6px;
+  }
+  .summary-box.accent .value{color:var(--coral);}
+
+  .btn-primary{
+    background:var(--coral);
+    color:#1A0F0C;
+    border:none;
+    font-size:15px;
+    font-weight:800;
+    padding:15px 20px;
+    border-radius:999px;
     cursor:pointer;
     white-space:nowrap;
+    width:100%;
   }
-  .btn-primary:disabled{opacity:.45;cursor:not-allowed;}
+  .btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-primary:active{background:var(--coral-dark);}
   .btn-secondary{
-    background:var(--white);
-    color:var(--navy);
-    border:1px solid var(--gray-line);
+    background:transparent;
+    color:var(--text);
+    border:1px solid var(--border);
     font-size:14px;
-    font-weight:600;
-    padding:11px 16px;
-    border-radius:9px;
+    font-weight:700;
+    padding:13px 16px;
+    border-radius:999px;
     cursor:pointer;
+    width:100%;
   }
+
   .filters{
     display:grid;
     grid-template-columns:1fr;
@@ -262,112 +275,138 @@
   @media(min-width:640px){
     .filters{grid-template-columns:1fr 1fr 1fr auto;align-items:end;}
   }
-  .summary-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-    margin-bottom:14px;
-  }
-  .summary-box{
-    background:var(--white);
-    border:1px solid var(--gray-line);
-    border-radius:var(--radius);
-    padding:14px;
-  }
-  .summary-box .label{
-    font-size:11.5px;
-    color:var(--gray-text);
-    font-weight:600;
-    text-transform:uppercase;
-    letter-spacing:.03em;
-  }
-  .summary-box .value{
-    font-size:22px;
-    font-weight:800;
-    color:var(--navy);
-    margin-top:4px;
-  }
+
   .dept-breakdown{
-    background:var(--white);
-    border:1px solid var(--gray-line);
-    border-radius:var(--radius);
-    padding:14px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:6px 16px;
     margin-bottom:14px;
     font-size:13.5px;
   }
   .dept-breakdown .row{
     display:flex;
+    align-items:center;
     justify-content:space-between;
-    padding:6px 0;
-    border-bottom:1px solid var(--gray-line);
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
   }
   .dept-breakdown .row:last-child{border-bottom:none;}
+  .dept-breakdown .dept-name{display:flex;align-items:center;gap:9px;color:var(--text);}
+  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+
+  .table-scroll{overflow-x:auto;border-radius:var(--radius-lg);border:1px solid var(--border);}
   table.data-table{
     width:100%;
     border-collapse:collapse;
-    background:var(--white);
-    border:1px solid var(--gray-line);
-    border-radius:var(--radius);
-    overflow:hidden;
+    background:var(--surface);
     font-size:13px;
   }
   table.data-table th{
-    background:var(--gray-bg);
+    background:var(--surface-alt);
     text-align:left;
-    padding:9px 10px;
-    font-size:11px;
+    padding:11px 12px;
+    font-size:10.5px;
     text-transform:uppercase;
-    letter-spacing:.03em;
-    color:var(--gray-text);
-    border-bottom:1px solid var(--gray-line);
+    letter-spacing:.04em;
+    color:var(--text-muted);
+    border-bottom:1px solid var(--border);
     white-space:nowrap;
   }
   table.data-table td{
-    padding:9px 10px;
-    border-bottom:1px solid var(--gray-line);
+    padding:11px 12px;
+    border-bottom:1px solid var(--border);
     white-space:nowrap;
+    color:var(--text);
   }
   table.data-table tr:last-child td{border-bottom:none;}
-  .table-scroll{overflow-x:auto;border-radius:var(--radius);}
+  .pill{
+    display:inline-block;
+    padding:3px 10px;
+    border-radius:999px;
+    font-size:11.5px;
+    font-weight:700;
+  }
   .empty-state{
     text-align:center;
-    padding:30px 16px;
-    color:var(--gray-text);
+    padding:34px 16px;
+    color:var(--text-muted);
     font-size:13.5px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
   }
-  .download-bar{
+  .download-bar{display:flex;justify-content:flex-end;margin-bottom:12px;}
+  .download-bar .btn-primary{width:auto;padding:12px 22px;}
+
+  /* Bottom Nav */
+  nav.bottom-nav{
+    position:fixed;
+    left:0;right:0;bottom:0;
+    background:var(--bg-elevated);
+    border-top:1px solid var(--border);
+    padding:8px 18px calc(8px + env(safe-area-inset-bottom));
+    z-index:30;
     display:flex;
-    justify-content:flex-end;
-    margin-bottom:12px;
+    justify-content:center;
+    gap:10px;
   }
+  nav.bottom-nav .nav-inner{
+    max-width:760px;
+    width:100%;
+    display:flex;
+    gap:8px;
+  }
+  nav.bottom-nav button{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    background:transparent;
+    border:none;
+    color:var(--text-faint);
+    font-size:11px;
+    font-weight:700;
+    padding:6px 4px 4px;
+    border-radius:12px;
+    cursor:pointer;
+  }
+  nav.bottom-nav button svg{width:21px;height:21px;stroke:var(--text-faint);}
+  nav.bottom-nav button.active{color:var(--coral);}
+  nav.bottom-nav button.active svg{stroke:var(--coral);}
+
   /* Toast */
   #toast{
     position:fixed;
     left:16px;right:16px;
-    bottom:110px;
-    background:var(--navy-dark);
-    color:var(--white);
+    bottom:78px;
+    background:var(--surface-alt);
+    border:1px solid var(--border);
+    color:var(--text);
     padding:13px 16px;
-    border-radius:9px;
+    border-radius:var(--radius-md);
     font-size:13.5px;
     text-align:center;
     z-index:50;
     display:none;
-    box-shadow:0 6px 20px rgba(0,0,0,.2);
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
   }
+
   /* Modal */
   .modal-overlay{
     position:fixed;inset:0;
-    background:rgba(11,29,56,.5);
+    background:rgba(6,7,12,.65);
     display:none;
     align-items:center;justify-content:center;
     z-index:60;
     padding:20px;
   }
   .modal-box{
-    background:var(--white);
-    border-radius:12px;
-    padding:22px 20px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:24px 20px;
     max-width:340px;
     width:100%;
     text-align:center;
@@ -375,31 +414,25 @@
   .modal-box p{
     font-size:14.5px;
     line-height:1.5;
-    margin:0 0 18px;
+    margin:0 0 16px;
     color:var(--text);
   }
-  .modal-actions{
-    display:flex;
-    gap:10px;
-  }
+  .modal-box .field{text-align:left;margin-bottom:18px;}
+  .modal-actions{display:flex;gap:10px;}
   .modal-actions button{flex:1;}
   .hidden{display:none !important;}
 </style>
 </head>
-<body>
+<body class="tab-leader">
 
 <header class="top">
   <p class="eyebrow">Washing Machine</p>
   <h1>Daily Overtime Form</h1>
-  <nav class="tabs">
-    <button id="tabLeaderBtn" class="active">Input Lembur</button>
-    <button id="tabAdminBtn">Data Admin</button>
-  </nav>
 </header>
 
 <main>
   <div id="configWarning" class="banner-warn hidden">
-    ⚠️ Supabase belum dikonfigurasi. Buka file ini, isi <b>SUPABASE_URL</b> dan <b>SUPABASE_ANON_KEY</b> di bagian atas kode &lt;script&gt;, lalu simpan ulang.
+    ⚠️ Supabase belum dikonfigurasi. Isi <b>SUPABASE_URL</b> dan <b>SUPABASE_ANON_KEY</b> di bagian atas kode &lt;script&gt;, lalu simpan ulang file ini.
   </div>
 
   <!-- LEADER VIEW -->
@@ -434,6 +467,19 @@
     </div>
     <div id="employeeList"></div>
     <button class="add-btn" id="addEmployeeBtn">+ Tambah Karyawan</button>
+
+    <p class="section-title">Ringkasan</p>
+    <div class="summary-grid">
+      <div class="summary-box">
+        <div class="label">Total Employee</div>
+        <div class="value" id="totalEmployee">0</div>
+      </div>
+      <div class="summary-box accent">
+        <div class="label">Total Overtime</div>
+        <div class="value" id="totalHour">0 Hour</div>
+      </div>
+    </div>
+    <button class="btn-primary" id="submitBtn">Submit Overtime</button>
   </section>
 
   <!-- ADMIN VIEW -->
@@ -463,7 +509,7 @@
         <input type="text" id="filterSearch" placeholder="Cari...">
       </div>
       <div class="field">
-        <button class="btn-secondary" id="refreshBtn" style="width:100%;">Refresh</button>
+        <button class="btn-secondary" id="refreshBtn">Refresh</button>
       </div>
     </div>
 
@@ -472,7 +518,7 @@
         <div class="label">Total Employee</div>
         <div class="value" id="sumEmployee">0</div>
       </div>
-      <div class="summary-box">
+      <div class="summary-box accent">
         <div class="label">Total Overtime</div>
         <div class="value" id="sumHours">0 Hours</div>
       </div>
@@ -499,24 +545,47 @@
   </section>
 </main>
 
-<div class="footer-bar" id="footerBar">
-  <div class="footer-inner">
-    <div class="totals">
-      Total Employee: <b id="totalEmployee">0</b><br>
-      Total Overtime: <b id="totalHour">0</b> Hour
-    </div>
-    <button class="btn-primary" id="submitBtn">Submit Overtime</button>
+<nav class="bottom-nav">
+  <div class="nav-inner">
+    <button id="tabLeaderBtn" class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Input Lembur
+    </button>
+    <button id="tabAdminBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Data Admin
+    </button>
   </div>
-</div>
+</nav>
 
 <div id="toast"></div>
 
+<!-- Submit confirmation + leader password -->
 <div class="modal-overlay" id="confirmModal">
   <div class="modal-box">
     <p id="confirmText"></p>
+    <div class="field">
+      <label>Password Leader <span class="req">*</span></label>
+      <input type="password" id="leaderPasswordInput" placeholder="Masukkan password">
+    </div>
     <div class="modal-actions">
       <button class="btn-secondary" id="cancelSubmit">Cancel</button>
       <button class="btn-primary" id="confirmSubmit">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin password gate -->
+<div class="modal-overlay" id="adminPasswordModal">
+  <div class="modal-box">
+    <p>Masukkan password Admin untuk membuka halaman ini.</p>
+    <div class="field">
+      <label>Password Admin <span class="req">*</span></label>
+      <input type="password" id="adminPasswordInput" placeholder="Masukkan password">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelAdminPw">Cancel</button>
+      <button class="btn-primary" id="confirmAdminPw">Buka</button>
     </div>
   </div>
 </div>
@@ -549,6 +618,16 @@
    3. Salin Project URL dan anon public key dari Settings > API,
       lalu isi dua variabel di bawah ini.
 ========================================================= */
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+/* =========================================================
+   PASSWORD SEDERHANA
+   Catatan: ini hanya penghalang dasar (bukan sistem login
+   yang aman) - siapa pun yang membuka source code file ini
+   bisa melihat nilainya. Cukup untuk mencegah orang iseng,
+   bukan untuk data yang benar-benar rahasia.
+========================================================= */
 const SUPABASE_URL = "https://smqumoyvrouxhwxznhsu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtcXVtb3l2cm91eGh3eHpuaHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMTYzODMsImV4cCI6MjEwMjU5MjM4M30.QgYCu1AIj5Jdr-RS1NOO_aPfj8QA3TAvfdqP8Drpv30";
 
@@ -556,10 +635,16 @@ const isConfigured = SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY !
 const sb = isConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 const DEPARTMENTS = ["Production","Part Control","CMC","Engineering","PE","Maintenance","PQA Incoming","PQA Outgoing","Main Office"];
+const DEPT_COLORS = {
+  "Production":"#4C8EFF","Part Control":"#34D399","CMC":"#FBBF24","Engineering":"#A78BFA",
+  "PE":"#F472B6","Maintenance":"#FF6B5B","PQA Incoming":"#38BDF8","PQA Outgoing":"#F97316","Main Office":"#22D3EE"
+};
+function deptColor(d){ return DEPT_COLORS[d] || "#8B8FA3"; }
 
 /* ---------- State ---------- */
 let employees = [];
 let empSeq = 0;
+let adminUnlocked = false;
 
 function todayISO(){
   const d = new Date();
@@ -574,16 +659,39 @@ function fmtDateTime(ts){
   const d = new Date(ts);
   return fmtDateDisplay(d.toISOString().slice(0,10)) + " " + String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
 }
+function escapeHtml(str){
+  return (str ?? "").toString().replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
 
 /* ---------- Tabs ---------- */
 const tabLeaderBtn = document.getElementById("tabLeaderBtn");
 const tabAdminBtn = document.getElementById("tabAdminBtn");
 const leaderView = document.getElementById("leaderView");
 const adminView = document.getElementById("adminView");
-const footerBar = document.getElementById("footerBar");
+const adminPasswordModal = document.getElementById("adminPasswordModal");
+const adminPasswordInput = document.getElementById("adminPasswordInput");
 
 tabLeaderBtn.onclick = () => switchTab("leader");
-tabAdminBtn.onclick = () => switchTab("admin");
+tabAdminBtn.onclick = () => {
+  if(adminUnlocked){ switchTab("admin"); return; }
+  adminPasswordInput.value = "";
+  adminPasswordModal.style.display = "flex";
+  setTimeout(() => adminPasswordInput.focus(), 50);
+};
+
+document.getElementById("cancelAdminPw").onclick = () => adminPasswordModal.style.display = "none";
+document.getElementById("confirmAdminPw").onclick = () => {
+  if(adminPasswordInput.value === ADMIN_PASSWORD){
+    adminUnlocked = true;
+    adminPasswordModal.style.display = "none";
+    switchTab("admin");
+  }else{
+    showToast("Password Admin salah.");
+  }
+};
+adminPasswordInput.addEventListener("keydown", e => {
+  if(e.key === "Enter") document.getElementById("confirmAdminPw").click();
+});
 
 function switchTab(tab){
   const isLeader = tab === "leader";
@@ -591,7 +699,7 @@ function switchTab(tab){
   tabAdminBtn.classList.toggle("active", !isLeader);
   leaderView.classList.toggle("hidden", !isLeader);
   adminView.classList.toggle("hidden", isLeader);
-  footerBar.classList.toggle("hidden", !isLeader);
+  document.body.className = isLeader ? "tab-leader" : "tab-admin";
   if(!isLeader) loadAdminData();
 }
 
@@ -601,6 +709,11 @@ const dateInput = document.getElementById("dateInput");
 const departmentInput = document.getElementById("departmentInput");
 
 dateInput.value = todayISO();
+
+departmentInput.addEventListener("change", () => {
+  const color = deptColor(departmentInput.value);
+  document.querySelectorAll(".emp-row").forEach(r => r.style.borderLeftColor = color);
+});
 
 function addEmployee(){
   empSeq++;
@@ -616,9 +729,11 @@ function removeEmployee(uid){
 
 function renderEmployees(){
   employeeList.innerHTML = "";
+  const color = deptColor(departmentInput.value);
   employees.forEach((emp, idx) => {
     const row = document.createElement("div");
     row.className = "emp-row";
+    row.style.borderLeftColor = color;
     row.innerHTML = `
       <div class="emp-badge">Employee ${idx+1}</div>
       <div class="field">
@@ -651,15 +766,11 @@ function renderEmployees(){
   updateTotals();
 }
 
-function escapeHtml(str){
-  return (str ?? "").toString().replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-}
-
 function updateTotals(){
   const totalEmployee = employees.length;
   const totalHour = employees.reduce((sum,e) => sum + (parseFloat(e.overtime) || 0), 0);
   document.getElementById("totalEmployee").textContent = totalEmployee;
-  document.getElementById("totalHour").textContent = totalHour;
+  document.getElementById("totalHour").textContent = totalHour + " Hour";
 }
 
 document.getElementById("addEmployeeBtn").onclick = addEmployee;
@@ -669,6 +780,7 @@ addEmployee();
 const submitBtn = document.getElementById("submitBtn");
 const confirmModal = document.getElementById("confirmModal");
 const confirmText = document.getElementById("confirmText");
+const leaderPasswordInput = document.getElementById("leaderPasswordInput");
 
 submitBtn.onclick = () => {
   if(!isConfigured){ showToast("Supabase belum dikonfigurasi."); return; }
@@ -684,12 +796,21 @@ submitBtn.onclick = () => {
   const totalEmployee = employees.length;
   const totalHour = employees.reduce((sum,e) => sum + (parseFloat(e.overtime) || 0), 0);
   confirmText.textContent = `Submit ${totalEmployee} employee dengan total ${totalHour} jam overtime?`;
+  leaderPasswordInput.value = "";
   confirmModal.style.display = "flex";
+  setTimeout(() => leaderPasswordInput.focus(), 50);
 };
 
 document.getElementById("cancelSubmit").onclick = () => confirmModal.style.display = "none";
+leaderPasswordInput.addEventListener("keydown", e => {
+  if(e.key === "Enter") document.getElementById("confirmSubmit").click();
+});
 
 document.getElementById("confirmSubmit").onclick = async () => {
+  if(leaderPasswordInput.value !== LEADER_PASSWORD){
+    showToast("Password Leader salah.");
+    return;
+  }
   confirmModal.style.display = "none";
   submitBtn.disabled = true;
   submitBtn.textContent = "Menyimpan...";
@@ -778,17 +899,18 @@ function renderAdminTable(rows){
   tbody.innerHTML = "";
   if(rows.length === 0){
     emptyState.classList.remove("hidden");
-    document.getElementById("dataTable").classList.add("hidden");
+    document.getElementById("dataTable").parentElement.classList.add("hidden");
     return;
   }
   emptyState.classList.add("hidden");
-  document.getElementById("dataTable").classList.remove("hidden");
+  document.getElementById("dataTable").parentElement.classList.remove("hidden");
   rows.forEach((r, idx) => {
+    const color = deptColor(r.department);
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${idx+1}</td>
       <td>${fmtDateDisplay(r.overtime_date)}</td>
-      <td>${escapeHtml(r.department)}</td>
+      <td><span class="pill" style="background:${color}22;color:${color}">${escapeHtml(r.department)}</span></td>
       <td>${escapeHtml(r.name)}</td>
       <td>${escapeHtml(r.npk || "-")}</td>
       <td>${r.overtime_hour}</td>
@@ -812,7 +934,7 @@ function renderAdminSummary(rows){
   const breakdown = document.getElementById("deptBreakdown");
   const entries = Object.entries(byDept).sort((a,b) => b[1]-a[1]);
   breakdown.innerHTML = entries.length
-    ? entries.map(([dept,hrs]) => `<div class="row"><span>${escapeHtml(dept)}</span><b>${hrs} Hours</b></div>`).join("")
+    ? entries.map(([dept,hrs]) => `<div class="row"><span class="dept-name"><span class="dot" style="background:${deptColor(dept)}"></span>${escapeHtml(dept)}</span><b>${hrs} Hours</b></div>`).join("")
     : `<div class="row"><span>Tidak ada data</span></div>`;
 }
 
