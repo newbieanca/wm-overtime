@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
 <title>Washing Machine - Daily Overtime Form</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -28,8 +28,8 @@
     --radius-md:14px;
     --radius-sm:10px;
   }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  *{box-sizing:border-box;max-width:100%;}
+  html,body{margin:0;padding:0;width:100%;overflow-x:hidden;}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg);
@@ -56,7 +56,7 @@
     margin:0 0 4px;
   }
   header.top h1{
-    font-size:21px;
+    font-size:20px;
     margin:0;
     font-weight:800;
     letter-spacing:-0.01em;
@@ -64,9 +64,10 @@
   }
 
   main{
-    max-width:760px;
+    max-width:800px;
+    width:100%;
     margin:0 auto;
-    padding:18px 16px 8px;
+    padding:16px 14px 8px;
   }
 
   .banner-warn{
@@ -84,7 +85,7 @@
     background:var(--surface);
     border:1px solid var(--border);
     border-radius:var(--radius-lg);
-    padding:18px;
+    padding:16px;
     margin-bottom:14px;
   }
   .field{margin-bottom:14px;}
@@ -98,15 +99,19 @@
     letter-spacing:.01em;
   }
   label .req{color:var(--coral);}
-  input[type=text],input[type=number],input[type=date],input[type=password],select,textarea{
+  input[type=text],input[type=number],input[type=date],input[type=time],input[type=password],select,textarea{
     width:100%;
-    font-size:15px;
+    font-size:16px;
     padding:12px 13px;
     border:1px solid var(--border);
     border-radius:var(--radius-sm);
     background:var(--surface-alt);
     color:var(--text);
     font-family:inherit;
+  }
+  input[readonly]{
+    background:var(--surface);
+    color:var(--text-muted);
   }
   input::placeholder{color:var(--text-faint);}
   input:focus,select:focus,textarea:focus{
@@ -132,26 +137,26 @@
   }
 
   .section-title{
-    font-size:13.5px;
+    font-size:13px;
     font-weight:700;
     color:var(--text-muted);
     text-transform:uppercase;
     letter-spacing:.05em;
-    margin:22px 2px 10px;
+    margin:20px 2px 10px;
   }
 
   .emp-header-row{
     display:none;
-    grid-template-columns:2fr 1.2fr 1fr 1.6fr 34px;
-    gap:10px;
+    grid-template-columns:1.5fr 0.9fr 0.85fr 0.85fr 0.8fr 1.3fr 32px;
+    gap:8px;
     padding:0 4px 8px;
-    font-size:11px;
+    font-size:10.5px;
     font-weight:700;
     color:var(--text-faint);
     text-transform:uppercase;
-    letter-spacing:.05em;
+    letter-spacing:.04em;
   }
-  @media(min-width:768px){
+  @media(min-width:900px){
     .emp-header-row{display:grid;}
   }
 
@@ -163,17 +168,20 @@
     padding:15px 15px 15px 13px;
     margin-bottom:10px;
     display:grid;
-    grid-template-columns:1fr;
+    grid-template-columns:1fr 1fr;
     gap:12px;
     position:relative;
   }
-  @media(min-width:768px){
+  .emp-row .field.full{grid-column:1 / -1;}
+  @media(min-width:900px){
     .emp-row{
-      grid-template-columns:2fr 1.2fr 1fr 1.6fr 34px;
+      grid-template-columns:1.5fr 0.9fr 0.85fr 0.85fr 0.8fr 1.3fr 32px;
       align-items:center;
-      padding:12px 14px 12px 12px;
+      padding:10px 12px 10px 11px;
+      gap:8px;
     }
     .emp-row .field{margin-bottom:0;}
+    .emp-row .field.full{grid-column:auto;}
     .emp-row label{display:none;}
   }
   .emp-row .emp-badge{
@@ -181,8 +189,9 @@
     font-weight:700;
     color:var(--coral);
     margin-bottom:2px;
+    grid-column:1 / -1;
   }
-  @media(min-width:768px){
+  @media(min-width:900px){
     .emp-row .emp-badge{display:none;}
   }
   .remove-btn{
@@ -233,7 +242,7 @@
     letter-spacing:.04em;
   }
   .summary-box .value{
-    font-size:26px;
+    font-size:24px;
     font-weight:800;
     color:var(--text);
     margin-top:6px;
@@ -295,7 +304,7 @@
   .dept-breakdown .dept-name{display:flex;align-items:center;gap:9px;color:var(--text);}
   .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 
-  .table-scroll{overflow-x:auto;border-radius:var(--radius-lg);border:1px solid var(--border);}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius-lg);border:1px solid var(--border);}
   table.data-table{
     width:100%;
     border-collapse:collapse;
@@ -352,7 +361,7 @@
     gap:10px;
   }
   nav.bottom-nav .nav-inner{
-    max-width:760px;
+    max-width:800px;
     width:100%;
     display:flex;
     gap:8px;
@@ -421,6 +430,16 @@
   .modal-actions{display:flex;gap:10px;}
   .modal-actions button{flex:1;}
   .hidden{display:none !important;}
+
+  /* Extra tightening for small phones */
+  @media(max-width:380px){
+    header.top{padding:16px 14px 12px;}
+    header.top h1{font-size:18px;}
+    main{padding:14px 12px 8px;}
+    .card,.summary-box,.dept-breakdown{padding:13px;}
+    .summary-box .value{font-size:21px;}
+    .btn-primary,.btn-secondary{font-size:14px;padding:13px 16px;}
+  }
 </style>
 </head>
 <body class="tab-leader">
@@ -463,7 +482,7 @@
 
     <p class="section-title">Employee Overtime</p>
     <div class="emp-header-row">
-      <span>Nama</span><span>NPK</span><span>Overtime</span><span>Remark</span><span></span>
+      <span>Nama</span><span>NPK</span><span>Start OT</span><span>End OT</span><span>Overtime</span><span>Remark</span><span></span>
     </div>
     <div id="employeeList"></div>
     <button class="add-btn" id="addEmployeeBtn">+ Tambah Karyawan</button>
@@ -535,7 +554,7 @@
         <thead>
           <tr>
             <th>No</th><th>Date</th><th>Department</th><th>Nama</th>
-            <th>NPK</th><th>Overtime</th><th>Remark</th><th>Submitted</th>
+            <th>NPK</th><th>Start OT</th><th>End OT</th><th>Overtime</th><th>Remark</th><th>Submitted</th>
           </tr>
         </thead>
         <tbody id="dataTableBody"></tbody>
@@ -592,9 +611,16 @@
 
 <script>
 /* =========================================================
-   KONFIGURASI SUPABASE - ISI SEBELUM DIGUNAKAN
-   1. Buat project di https://supabase.com
-   2. Jalankan SQL berikut di SQL Editor Supabase:
+   KONFIGURASI SUPABASE
+
+   Tabel overtime_records sekarang butuh kolom start_time dan
+   end_time. Kalau tabel ini SUDAH pernah dibuat sebelumnya,
+   jalankan dulu migrasi ini di SQL Editor Supabase:
+
+   alter table overtime_records add column if not exists start_time time;
+   alter table overtime_records add column if not exists end_time time;
+
+   Kalau BELUM pernah membuat tabel sama sekali, jalankan ini:
 
    create table overtime_records (
      id bigint generated always as identity primary key,
@@ -602,6 +628,8 @@
      department text not null,
      name text not null,
      npk text,
+     start_time time,
+     end_time time,
      overtime_hour numeric not null,
      remark text,
      submitted_at timestamptz not null default now()
@@ -614,9 +642,6 @@
 
    create policy "public select" on overtime_records
      for select to anon using (true);
-
-   3. Salin Project URL dan anon public key dari Settings > API,
-      lalu isi dua variabel di bawah ini.
 ========================================================= */
 const SUPABASE_URL = "https://smqumoyvrouxhwxznhsu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtcXVtb3l2cm91eGh3eHpuaHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMTYzODMsImV4cCI6MjEwMjU5MjM4M30.QgYCu1AIj5Jdr-RS1NOO_aPfj8QA3TAvfdqP8Drpv30";
@@ -640,6 +665,16 @@ const DEPT_COLORS = {
   "PE":"#F472B6","Maintenance":"#FF6B5B","PQA Incoming":"#38BDF8","PQA Outgoing":"#F97316","Main Office":"#22D3EE"
 };
 function deptColor(d){ return DEPT_COLORS[d] || "#8B8FA3"; }
+
+/* ---------- Overtime hour calculation ---------- */
+function calcOvertimeHours(start, end){
+  if(!start || !end) return "";
+  const [sh,sm] = start.split(":").map(Number);
+  const [eh,em] = end.split(":").map(Number);
+  let diff = (eh*60+em) - (sh*60+sm);
+  if(diff <= 0) diff += 24*60; // lewat tengah malam
+  return Math.round((diff/60)*100)/100;
+}
 
 /* ---------- State ---------- */
 let employees = [];
@@ -717,7 +752,7 @@ departmentInput.addEventListener("change", () => {
 
 function addEmployee(){
   empSeq++;
-  employees.push({ uid: empSeq, name:"", npk:"", overtime:"", remark:"" });
+  employees.push({ uid: empSeq, name:"", npk:"", startTime:"", endTime:"", overtime:"", remark:"" });
   renderEmployees();
 }
 
@@ -736,27 +771,47 @@ function renderEmployees(){
     row.style.borderLeftColor = color;
     row.innerHTML = `
       <div class="emp-badge">Employee ${idx+1}</div>
-      <div class="field">
+      <div class="field full">
         <label>Nama <span class="req">*</span></label>
-        <input type="text" placeholder="Nama karyawan" data-field="name" value="${escapeHtml(emp.name)}">
+        <input type="text" placeholder="Nama karyawan" data-field="name" value="${escapeHtml(emp.name)}" style="text-transform:uppercase;">
       </div>
       <div class="field">
         <label>NPK</label>
         <input type="text" placeholder="Opsional" data-field="npk" value="${escapeHtml(emp.npk)}">
       </div>
       <div class="field">
-        <label>Overtime Hour <span class="req">*</span></label>
-        <input type="number" min="0" step="0.5" placeholder="Jam" data-field="overtime" value="${escapeHtml(emp.overtime)}">
-      </div>
-      <div class="field">
         <label>Remark</label>
         <input type="text" placeholder="Opsional" data-field="remark" value="${escapeHtml(emp.remark)}">
       </div>
+      <div class="field">
+        <label>Start OT <span class="req">*</span></label>
+        <input type="time" data-field="startTime" value="${escapeHtml(emp.startTime)}">
+      </div>
+      <div class="field">
+        <label>End OT <span class="req">*</span></label>
+        <input type="time" data-field="endTime" value="${escapeHtml(emp.endTime)}">
+      </div>
+      <div class="field">
+        <label>Overtime Hour</label>
+        <input type="text" data-field="overtimeDisplay" value="${emp.overtime === "" ? "" : emp.overtime + " h"}" readonly placeholder="Otomatis">
+      </div>
       <button class="remove-btn" ${employees.length<=1 ? "disabled":""} title="Hapus">&times;</button>
     `;
-    row.querySelectorAll("input").forEach(inp => {
+    row.querySelectorAll("input[data-field]").forEach(inp => {
       inp.addEventListener("input", () => {
-        emp[inp.dataset.field] = inp.value;
+        if(inp.dataset.field === "name"){
+          const pos = inp.selectionStart;
+          inp.value = inp.value.toUpperCase();
+          inp.setSelectionRange(pos, pos);
+        }
+        if(inp.dataset.field !== "overtimeDisplay"){
+          emp[inp.dataset.field] = inp.value;
+        }
+        if(inp.dataset.field === "startTime" || inp.dataset.field === "endTime"){
+          emp.overtime = calcOvertimeHours(emp.startTime, emp.endTime);
+          const displayInput = row.querySelector('[data-field="overtimeDisplay"]');
+          displayInput.value = emp.overtime === "" ? "" : emp.overtime + " h";
+        }
         updateTotals();
       });
     });
@@ -770,7 +825,7 @@ function updateTotals(){
   const totalEmployee = employees.length;
   const totalHour = employees.reduce((sum,e) => sum + (parseFloat(e.overtime) || 0), 0);
   document.getElementById("totalEmployee").textContent = totalEmployee;
-  document.getElementById("totalHour").textContent = totalHour + " Hour";
+  document.getElementById("totalHour").textContent = Math.round(totalHour*100)/100 + " Hour";
 }
 
 document.getElementById("addEmployeeBtn").onclick = addEmployee;
@@ -788,13 +843,14 @@ submitBtn.onclick = () => {
   if(!departmentInput.value){ showToast("Department wajib diisi."); return; }
   for(const e of employees){
     if(!e.name.trim()){ showToast("Nama wajib diisi untuk semua karyawan."); return; }
+    if(!e.startTime || !e.endTime){ showToast("Start OT dan End OT wajib diisi untuk semua karyawan."); return; }
     if(e.overtime === "" || isNaN(parseFloat(e.overtime)) || parseFloat(e.overtime) <= 0){
-      showToast("Overtime Hour wajib diisi dengan angka > 0.");
+      showToast("Overtime Hour tidak valid, periksa Start OT / End OT.");
       return;
     }
   }
   const totalEmployee = employees.length;
-  const totalHour = employees.reduce((sum,e) => sum + (parseFloat(e.overtime) || 0), 0);
+  const totalHour = Math.round(employees.reduce((sum,e) => sum + (parseFloat(e.overtime) || 0), 0)*100)/100;
   confirmText.textContent = `Submit ${totalEmployee} employee dengan total ${totalHour} jam overtime?`;
   leaderPasswordInput.value = "";
   confirmModal.style.display = "flex";
@@ -820,13 +876,15 @@ document.getElementById("confirmSubmit").onclick = async () => {
       department: departmentInput.value,
       name: e.name.trim(),
       npk: e.npk.trim() || null,
+      start_time: e.startTime,
+      end_time: e.endTime,
       overtime_hour: parseFloat(e.overtime),
       remark: e.remark.trim() || null
     }));
     const { error } = await sb.from("overtime_records").insert(payload);
     if(error) throw error;
     const totalEmployee = payload.length;
-    const totalHour = payload.reduce((s,e)=>s+e.overtime_hour,0);
+    const totalHour = Math.round(payload.reduce((s,e)=>s+e.overtime_hour,0)*100)/100;
     showToast(`Data overtime berhasil disimpan. ${totalEmployee} employee, total ${totalHour} overtime hours.`, 3500);
     employees = [];
     addEmployee();
@@ -893,6 +951,11 @@ async function loadAdminData(){
   }
 }
 
+function fmtTime(t){
+  if(!t) return "-";
+  return t.slice(0,5);
+}
+
 function renderAdminTable(rows){
   const tbody = document.getElementById("dataTableBody");
   const emptyState = document.getElementById("adminEmpty");
@@ -913,6 +976,8 @@ function renderAdminTable(rows){
       <td><span class="pill" style="background:${color}22;color:${color}">${escapeHtml(r.department)}</span></td>
       <td>${escapeHtml(r.name)}</td>
       <td>${escapeHtml(r.npk || "-")}</td>
+      <td>${fmtTime(r.start_time)}</td>
+      <td>${fmtTime(r.end_time)}</td>
       <td>${r.overtime_hour}</td>
       <td>${escapeHtml(r.remark || "-")}</td>
       <td>${fmtDateTime(r.submitted_at)}</td>
@@ -949,11 +1014,13 @@ document.getElementById("downloadBtn").onclick = () => {
     Department: r.department,
     Nama: r.name,
     NPK: r.npk || "",
+    "Start OT": fmtTime(r.start_time),
+    "End OT": fmtTime(r.end_time),
     "Overtime Hour": r.overtime_hour,
     Remark: r.remark || ""
   }));
   const ws = XLSX.utils.json_to_sheet(exportRows);
-  ws["!cols"] = [{wch:12},{wch:16},{wch:20},{wch:12},{wch:14},{wch:28}];
+  ws["!cols"] = [{wch:12},{wch:16},{wch:20},{wch:12},{wch:10},{wch:10},{wch:14},{wch:28}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Overtime");
   const label = filterDate.value ? filterDate.value : "all";
