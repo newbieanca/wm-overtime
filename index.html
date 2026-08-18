@@ -109,10 +109,6 @@
     color:var(--text);
     font-family:inherit;
   }
-  input[readonly]{
-    background:var(--surface);
-    color:var(--text-muted);
-  }
   input::placeholder{color:var(--text-faint);}
   input:focus,select:focus,textarea:focus{
     outline:none;
@@ -132,7 +128,7 @@
     grid-template-columns:1fr;
     gap:12px;
   }
-  @media(min-width:640px){
+  @media(min-width:560px){
     .row-2{grid-template-columns:1fr 1fr;}
   }
 
@@ -145,66 +141,36 @@
     margin:20px 2px 10px;
   }
 
-  .emp-header-row{
-    display:none;
-    grid-template-columns:1.5fr 0.9fr 0.85fr 0.85fr 0.8fr 1.3fr 32px;
-    gap:8px;
-    padding:0 4px 8px;
-    font-size:10.5px;
-    font-weight:700;
-    color:var(--text-faint);
-    text-transform:uppercase;
-    letter-spacing:.04em;
-  }
-  @media(min-width:900px){
-    .emp-header-row{display:grid;}
-  }
-
+  /* ---------- Employee card (same layout on every screen size) ---------- */
   .emp-row{
     background:var(--surface);
     border:1px solid var(--border);
     border-left:4px solid var(--coral);
     border-radius:var(--radius-md);
-    padding:15px 15px 15px 13px;
-    margin-bottom:10px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
+    padding:16px 44px 16px 16px;
+    margin-bottom:12px;
     position:relative;
   }
-  .emp-row .field.full{grid-column:1 / -1;}
-  @media(min-width:900px){
-    .emp-row{
-      grid-template-columns:1.5fr 0.9fr 0.85fr 0.85fr 0.8fr 1.3fr 32px;
-      align-items:center;
-      padding:10px 12px 10px 11px;
-      gap:8px;
-    }
-    .emp-row .field{margin-bottom:0;}
-    .emp-row .field.full{grid-column:auto;}
-    .emp-row label{display:none;}
-  }
   .emp-row .emp-badge{
-    font-size:12px;
+    font-size:12.5px;
     font-weight:700;
     color:var(--coral);
-    margin-bottom:2px;
-    grid-column:1 / -1;
-  }
-  @media(min-width:900px){
-    .emp-row .emp-badge{display:none;}
+    margin-bottom:12px;
   }
   .remove-btn{
+    position:absolute;
+    top:12px;
+    right:12px;
     border:none;
     background:rgba(255,107,107,.14);
     color:var(--danger);
-    width:34px;
-    height:34px;
-    border-radius:9px;
-    font-size:17px;
+    width:30px;
+    height:30px;
+    border-radius:8px;
+    font-size:16px;
     font-weight:700;
     cursor:pointer;
-    justify-self:end;
+    line-height:1;
   }
   .remove-btn:disabled{opacity:.3;cursor:not-allowed;}
 
@@ -481,9 +447,6 @@
     </div>
 
     <p class="section-title">Employee Overtime</p>
-    <div class="emp-header-row">
-      <span>Nama</span><span>NPK</span><span>Start OT</span><span>End OT</span><span>Overtime</span><span>Remark</span><span></span>
-    </div>
     <div id="employeeList"></div>
     <button class="add-btn" id="addEmployeeBtn">+ Tambah Karyawan</button>
 
@@ -613,9 +576,9 @@
 /* =========================================================
    KONFIGURASI SUPABASE
 
-   Tabel overtime_records sekarang butuh kolom start_time dan
-   end_time. Kalau tabel ini SUDAH pernah dibuat sebelumnya,
-   jalankan dulu migrasi ini di SQL Editor Supabase:
+   Tabel overtime_records butuh kolom start_time dan end_time.
+   Kalau tabel ini SUDAH pernah dibuat sebelumnya, jalankan dulu
+   migrasi ini di SQL Editor Supabase:
 
    alter table overtime_records add column if not exists start_time time;
    alter table overtime_records add column if not exists end_time time;
@@ -665,16 +628,6 @@ const DEPT_COLORS = {
   "PE":"#F472B6","Maintenance":"#FF6B5B","PQA Incoming":"#38BDF8","PQA Outgoing":"#F97316","Main Office":"#22D3EE"
 };
 function deptColor(d){ return DEPT_COLORS[d] || "#8B8FA3"; }
-
-/* ---------- Overtime hour calculation ---------- */
-function calcOvertimeHours(start, end){
-  if(!start || !end) return "";
-  const [sh,sm] = start.split(":").map(Number);
-  const [eh,em] = end.split(":").map(Number);
-  let diff = (eh*60+em) - (sh*60+sm);
-  if(diff <= 0) diff += 24*60; // lewat tengah malam
-  return Math.round((diff/60)*100)/100;
-}
 
 /* ---------- State ---------- */
 let employees = [];
@@ -770,32 +723,36 @@ function renderEmployees(){
     row.className = "emp-row";
     row.style.borderLeftColor = color;
     row.innerHTML = `
+      <button class="remove-btn" ${employees.length<=1 ? "disabled":""} title="Hapus">&times;</button>
       <div class="emp-badge">Employee ${idx+1}</div>
-      <div class="field full">
+      <div class="field">
         <label>Nama <span class="req">*</span></label>
         <input type="text" placeholder="Nama karyawan" data-field="name" value="${escapeHtml(emp.name)}" style="text-transform:uppercase;">
       </div>
-      <div class="field">
-        <label>NPK</label>
-        <input type="text" placeholder="Opsional" data-field="npk" value="${escapeHtml(emp.npk)}">
+      <div class="row-2">
+        <div class="field">
+          <label>NPK</label>
+          <input type="text" placeholder="Opsional" data-field="npk" value="${escapeHtml(emp.npk)}">
+        </div>
+        <div class="field">
+          <label>Remark</label>
+          <input type="text" placeholder="Opsional" data-field="remark" value="${escapeHtml(emp.remark)}">
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label>Start OT <span class="req">*</span></label>
+          <input type="time" data-field="startTime" value="${escapeHtml(emp.startTime)}">
+        </div>
+        <div class="field">
+          <label>End OT <span class="req">*</span></label>
+          <input type="time" data-field="endTime" value="${escapeHtml(emp.endTime)}">
+        </div>
       </div>
       <div class="field">
-        <label>Remark</label>
-        <input type="text" placeholder="Opsional" data-field="remark" value="${escapeHtml(emp.remark)}">
+        <label>Overtime Hour <span class="req">*</span></label>
+        <input type="number" min="0" step="0.5" placeholder="Jam" data-field="overtime" value="${escapeHtml(emp.overtime)}">
       </div>
-      <div class="field">
-        <label>Start OT <span class="req">*</span></label>
-        <input type="time" data-field="startTime" value="${escapeHtml(emp.startTime)}">
-      </div>
-      <div class="field">
-        <label>End OT <span class="req">*</span></label>
-        <input type="time" data-field="endTime" value="${escapeHtml(emp.endTime)}">
-      </div>
-      <div class="field">
-        <label>Overtime Hour</label>
-        <input type="text" data-field="overtimeDisplay" value="${emp.overtime === "" ? "" : emp.overtime + " h"}" readonly placeholder="Otomatis">
-      </div>
-      <button class="remove-btn" ${employees.length<=1 ? "disabled":""} title="Hapus">&times;</button>
     `;
     row.querySelectorAll("input[data-field]").forEach(inp => {
       inp.addEventListener("input", () => {
@@ -804,14 +761,7 @@ function renderEmployees(){
           inp.value = inp.value.toUpperCase();
           inp.setSelectionRange(pos, pos);
         }
-        if(inp.dataset.field !== "overtimeDisplay"){
-          emp[inp.dataset.field] = inp.value;
-        }
-        if(inp.dataset.field === "startTime" || inp.dataset.field === "endTime"){
-          emp.overtime = calcOvertimeHours(emp.startTime, emp.endTime);
-          const displayInput = row.querySelector('[data-field="overtimeDisplay"]');
-          displayInput.value = emp.overtime === "" ? "" : emp.overtime + " h";
-        }
+        emp[inp.dataset.field] = inp.value;
         updateTotals();
       });
     });
@@ -845,7 +795,7 @@ submitBtn.onclick = () => {
     if(!e.name.trim()){ showToast("Nama wajib diisi untuk semua karyawan."); return; }
     if(!e.startTime || !e.endTime){ showToast("Start OT dan End OT wajib diisi untuk semua karyawan."); return; }
     if(e.overtime === "" || isNaN(parseFloat(e.overtime)) || parseFloat(e.overtime) <= 0){
-      showToast("Overtime Hour tidak valid, periksa Start OT / End OT.");
+      showToast("Overtime Hour wajib diisi dengan angka > 0.");
       return;
     }
   }
