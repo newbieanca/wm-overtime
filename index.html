@@ -628,8 +628,8 @@ const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
    bisa melihat nilainya. Cukup untuk mencegah orang iseng,
    bukan untuk data yang benar-benar rahasia.
 ========================================================= */
-const SUPABASE_URL = "https://smqumoyvrouxhwxznhsu.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtcXVtb3l2cm91eGh3eHpuaHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMTYzODMsImV4cCI6MjEwMjU5MjM4M30.QgYCu1AIj5Jdr-RS1NOO_aPfj8QA3TAvfdqP8Drpv30";
+const LEADER_PASSWORD = "leader1234";
+const ADMIN_PASSWORD = "admin1234";
 
 const isConfigured = SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY";
 const sb = isConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
