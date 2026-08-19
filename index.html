@@ -240,6 +240,11 @@
     cursor:pointer;
     width:100%;
   }
+  .btn-danger{
+    background:var(--danger);
+    color:#2A0B0B;
+  }
+  .btn-danger:active{background:#E85555;}
 
   .filters{
     display:grid;
@@ -302,6 +307,19 @@
     font-size:11.5px;
     font-weight:700;
   }
+  .action-btn{
+    border:none;
+    width:28px;
+    height:28px;
+    border-radius:7px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .action-btn svg{width:14px;height:14px;}
+  .action-btn.edit{background:rgba(76,142,255,.15);color:var(--blue);}
+  .action-btn.delete{background:rgba(255,107,107,.15);color:var(--danger);margin-left:6px;}
   .empty-state{
     text-align:center;
     padding:34px 16px;
@@ -376,6 +394,7 @@
     align-items:center;justify-content:center;
     z-index:60;
     padding:20px;
+    overflow-y:auto;
   }
   .modal-box{
     background:var(--surface);
@@ -385,15 +404,25 @@
     max-width:340px;
     width:100%;
     text-align:center;
+    margin:auto;
   }
+  .modal-box.wide{max-width:400px;text-align:left;}
+  .modal-box.wide .field{text-align:left;}
   .modal-box p{
     font-size:14.5px;
     line-height:1.5;
     margin:0 0 16px;
     color:var(--text);
   }
+  .modal-box .modal-title{
+    font-size:15.5px;
+    font-weight:800;
+    text-align:center;
+    margin:0 0 16px;
+    color:var(--text);
+  }
   .modal-box .field{text-align:left;margin-bottom:18px;}
-  .modal-actions{display:flex;gap:10px;}
+  .modal-actions{display:flex;gap:10px;margin-top:4px;}
   .modal-actions button{flex:1;}
   .hidden{display:none !important;}
 
@@ -517,7 +546,7 @@
         <thead>
           <tr>
             <th>No</th><th>Date</th><th>Department</th><th>Nama</th>
-            <th>NPK</th><th>Start OT</th><th>End OT</th><th>Overtime</th><th>Remark</th><th>Submitted</th>
+            <th>NPK</th><th>Start OT</th><th>End OT</th><th>Overtime</th><th>Remark</th><th>Submitted</th><th>Aksi</th>
           </tr>
         </thead>
         <tbody id="dataTableBody"></tbody>
@@ -572,16 +601,93 @@
   </div>
 </div>
 
+<!-- Edit record modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box wide">
+    <p class="modal-title">Edit Data Overtime</p>
+    <div class="row-2">
+      <div class="field">
+        <label>Date <span class="req">*</span></label>
+        <input type="date" id="editDate">
+      </div>
+      <div class="field">
+        <label>Department <span class="req">*</span></label>
+        <select id="editDepartment">
+          <option>Production</option>
+          <option>Part Control</option>
+          <option>CMC</option>
+          <option>Engineering</option>
+          <option>PE</option>
+          <option>Maintenance</option>
+          <option>PQA Incoming</option>
+          <option>PQA Outgoing</option>
+          <option>Main Office</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Nama <span class="req">*</span></label>
+      <input type="text" id="editName" style="text-transform:uppercase;">
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>NPK</label>
+        <input type="text" id="editNpk">
+      </div>
+      <div class="field">
+        <label>Remark</label>
+        <input type="text" id="editRemark">
+      </div>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>Start OT</label>
+        <input type="time" id="editStart">
+      </div>
+      <div class="field">
+        <label>End OT</label>
+        <input type="time" id="editEnd">
+      </div>
+    </div>
+    <div class="field">
+      <label>Overtime Hour <span class="req">*</span></label>
+      <input type="number" min="0" step="0.5" id="editOvertime">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelEdit">Cancel</button>
+      <button class="btn-primary" id="saveEdit">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <p id="deleteText"></p>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelDelete">Cancel</button>
+      <button class="btn-primary btn-danger" id="confirmDelete">Hapus</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =========================================================
    KONFIGURASI SUPABASE
 
-   Tabel overtime_records butuh kolom start_time dan end_time.
-   Kalau tabel ini SUDAH pernah dibuat sebelumnya, jalankan dulu
-   migrasi ini di SQL Editor Supabase:
+   Tabel overtime_records butuh kolom start_time dan end_time,
+   dan sekarang admin bisa update/delete data, jadi RLS perlu
+   policy update & delete juga. Kalau tabel SUDAH pernah dibuat,
+   jalankan migrasi ini di SQL Editor Supabase:
 
    alter table overtime_records add column if not exists start_time time;
    alter table overtime_records add column if not exists end_time time;
+
+   create policy "public update" on overtime_records
+     for update to anon using (true) with check (true);
+
+   create policy "public delete" on overtime_records
+     for delete to anon using (true);
 
    Kalau BELUM pernah membuat tabel sama sekali, jalankan ini:
 
@@ -605,6 +711,12 @@
 
    create policy "public select" on overtime_records
      for select to anon using (true);
+
+   create policy "public update" on overtime_records
+     for update to anon using (true) with check (true);
+
+   create policy "public delete" on overtime_records
+     for delete to anon using (true);
 ========================================================= */
 const SUPABASE_URL = "https://smqumoyvrouxhwxznhsu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtcXVtb3l2cm91eGh3eHpuaHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMTYzODMsImV4cCI6MjEwMjU5MjM4M30.QgYCu1AIj5Jdr-RS1NOO_aPfj8QA3TAvfdqP8Drpv30";
@@ -649,6 +761,10 @@ function fmtDateTime(ts){
 }
 function escapeHtml(str){
   return (str ?? "").toString().replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function fmtTime(t){
+  if(!t) return "-";
+  return t.slice(0,5);
 }
 
 /* ---------- Tabs ---------- */
@@ -901,11 +1017,6 @@ async function loadAdminData(){
   }
 }
 
-function fmtTime(t){
-  if(!t) return "-";
-  return t.slice(0,5);
-}
-
 function renderAdminTable(rows){
   const tbody = document.getElementById("dataTableBody");
   const emptyState = document.getElementById("adminEmpty");
@@ -931,6 +1042,14 @@ function renderAdminTable(rows){
       <td>${r.overtime_hour}</td>
       <td>${escapeHtml(r.remark || "-")}</td>
       <td>${fmtDateTime(r.submitted_at)}</td>
+      <td>
+        <button class="action-btn edit" data-id="${r.id}" title="Edit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </button>
+        <button class="action-btn delete" data-id="${r.id}" title="Hapus">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
@@ -952,6 +1071,116 @@ function renderAdminSummary(rows){
     ? entries.map(([dept,hrs]) => `<div class="row"><span class="dept-name"><span class="dot" style="background:${deptColor(dept)}"></span>${escapeHtml(dept)}</span><b>${hrs} Hours</b></div>`).join("")
     : `<div class="row"><span>Tidak ada data</span></div>`;
 }
+
+/* ---------- Edit / Delete ---------- */
+const editModal = document.getElementById("editModal");
+const deleteModal = document.getElementById("deleteModal");
+const deleteText = document.getElementById("deleteText");
+let editingId = null;
+let deletingId = null;
+
+document.getElementById("dataTableBody").addEventListener("click", (e) => {
+  const editBtn = e.target.closest(".action-btn.edit");
+  const deleteBtn = e.target.closest(".action-btn.delete");
+  if(editBtn) openEdit(editBtn.dataset.id);
+  if(deleteBtn) openDelete(deleteBtn.dataset.id);
+});
+
+function openEdit(id){
+  const record = currentRecords.find(r => String(r.id) === String(id));
+  if(!record) return;
+  editingId = record.id;
+  document.getElementById("editDate").value = record.overtime_date;
+  document.getElementById("editDepartment").value = record.department;
+  document.getElementById("editName").value = record.name;
+  document.getElementById("editNpk").value = record.npk || "";
+  document.getElementById("editRemark").value = record.remark || "";
+  document.getElementById("editStart").value = record.start_time ? record.start_time.slice(0,5) : "";
+  document.getElementById("editEnd").value = record.end_time ? record.end_time.slice(0,5) : "";
+  document.getElementById("editOvertime").value = record.overtime_hour;
+  editModal.style.display = "flex";
+}
+
+document.getElementById("cancelEdit").onclick = () => editModal.style.display = "none";
+
+document.getElementById("editName").addEventListener("input", (e) => {
+  const pos = e.target.selectionStart;
+  e.target.value = e.target.value.toUpperCase();
+  e.target.setSelectionRange(pos, pos);
+});
+
+document.getElementById("saveEdit").onclick = async () => {
+  const date = document.getElementById("editDate").value;
+  const department = document.getElementById("editDepartment").value;
+  const name = document.getElementById("editName").value.trim();
+  const npk = document.getElementById("editNpk").value.trim();
+  const remark = document.getElementById("editRemark").value.trim();
+  const start = document.getElementById("editStart").value;
+  const end = document.getElementById("editEnd").value;
+  const overtime = document.getElementById("editOvertime").value;
+
+  if(!date || !department){ showToast("Date dan Department wajib diisi."); return; }
+  if(!name){ showToast("Nama wajib diisi."); return; }
+  if(overtime === "" || isNaN(parseFloat(overtime)) || parseFloat(overtime) <= 0){
+    showToast("Overtime Hour wajib diisi dengan angka > 0.");
+    return;
+  }
+
+  const saveBtn = document.getElementById("saveEdit");
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Menyimpan...";
+  try{
+    const { error } = await sb.from("overtime_records").update({
+      overtime_date: date,
+      department: department,
+      name: name,
+      npk: npk || null,
+      start_time: start || null,
+      end_time: end || null,
+      overtime_hour: parseFloat(overtime),
+      remark: remark || null
+    }).eq("id", editingId);
+    if(error) throw error;
+    editModal.style.display = "none";
+    showToast("Data berhasil diperbarui.");
+    loadAdminData();
+  }catch(err){
+    console.error(err);
+    showToast("Gagal memperbarui data: " + err.message);
+  }finally{
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Simpan";
+  }
+};
+
+function openDelete(id){
+  const record = currentRecords.find(r => String(r.id) === String(id));
+  if(!record) return;
+  deletingId = record.id;
+  deleteText.textContent = `Hapus data overtime ${record.name} tanggal ${fmtDateDisplay(record.overtime_date)}? Tindakan ini tidak bisa dibatalkan.`;
+  deleteModal.style.display = "flex";
+}
+
+document.getElementById("cancelDelete").onclick = () => deleteModal.style.display = "none";
+
+document.getElementById("confirmDelete").onclick = async () => {
+  const btn = document.getElementById("confirmDelete");
+  btn.disabled = true;
+  btn.textContent = "Menghapus...";
+  try{
+    const { error } = await sb.from("overtime_records").delete().eq("id", deletingId);
+    if(error) throw error;
+    deleteModal.style.display = "none";
+    showToast("Data berhasil dihapus.");
+    loadAdminData();
+  }catch(err){
+    console.error(err);
+    showToast("Gagal menghapus data: " + err.message);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Hapus";
+  }
+};
 
 /* ---------- Download Excel ---------- */
 document.getElementById("downloadBtn").onclick = () => {
