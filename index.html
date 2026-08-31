@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
 <title>Washing Machine - Daily Overtime Form</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
@@ -446,7 +447,7 @@
 
 <main>
   <div id="configWarning" class="banner-warn hidden">
-    ⚠️ Supabase belum dikonfigurasi. Isi <b>SUPABASE_URL</b> dan <b>SUPABASE_ANON_KEY</b> di bagian atas kode &lt;script&gt;, lalu simpan ulang file ini.
+    ⚠️ Firebase belum dikonfigurasi. Isi <b>firebaseConfig</b> di bagian atas kode &lt;script&gt;, lalu simpan ulang file ini.
   </div>
 
   <!-- LEADER VIEW -->
@@ -673,53 +674,39 @@
 
 <script>
 /* =========================================================
-   KONFIGURASI SUPABASE
+   KONFIGURASI FIREBASE
 
-   Tabel overtime_records butuh kolom start_time dan end_time,
-   dan sekarang admin bisa update/delete data, jadi RLS perlu
-   policy update & delete juga. Kalau tabel SUDAH pernah dibuat,
-   jalankan migrasi ini di SQL Editor Supabase:
+   1. Buka https://console.firebase.google.com -> buat project baru.
+   2. Di dalam project, klik ikon "</>" (Add app -> Web) untuk daftarkan
+      web app -> beri nama bebas -> Firebase akan menampilkan object
+      firebaseConfig seperti di bawah ini. Salin ke sini.
+   3. Di sidebar kiri, buka Build -> Firestore Database -> Create database
+      -> pilih "Start in test mode" dulu (biar cepat), lokasi bebas
+      (pilih yang dekat, misalnya asia-southeast2 / Jakarta).
+   4. Buka tab "Rules" di Firestore, ganti isinya jadi ini (akses publik
+      tanpa login, konsisten dengan filosofi aplikasi ini):
 
-   alter table overtime_records add column if not exists start_time time;
-   alter table overtime_records add column if not exists end_time time;
+      rules_version = '2';
+      service cloud.firestore {
+        match /databases/{database}/documents {
+          match /overtime_records/{docId} {
+            allow read, write: if true;
+          }
+        }
+      }
 
-   create policy "public update" on overtime_records
-     for update to anon using (true) with check (true);
-
-   create policy "public delete" on overtime_records
-     for delete to anon using (true);
-
-   Kalau BELUM pernah membuat tabel sama sekali, jalankan ini:
-
-   create table overtime_records (
-     id bigint generated always as identity primary key,
-     overtime_date date not null,
-     department text not null,
-     name text not null,
-     npk text,
-     start_time time,
-     end_time time,
-     overtime_hour numeric not null,
-     remark text,
-     submitted_at timestamptz not null default now()
-   );
-
-   alter table overtime_records enable row level security;
-
-   create policy "public insert" on overtime_records
-     for insert to anon with check (true);
-
-   create policy "public select" on overtime_records
-     for select to anon using (true);
-
-   create policy "public update" on overtime_records
-     for update to anon using (true) with check (true);
-
-   create policy "public delete" on overtime_records
-     for delete to anon using (true);
+      Klik Publish. Tidak perlu bikin collection manual - collection
+      "overtime_records" otomatis muncul begitu data pertama disimpan
+      dari aplikasi ini.
 ========================================================= */
-const SUPABASE_URL = "https://smqumoyvrouxhwxznhsu.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtcXVtb3l2cm91eGh3eHpuaHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMTYzODMsImV4cCI6MjEwMjU5MjM4M30.QgYCu1AIj5Jdr-RS1NOO_aPfj8QA3TAvfdqP8Drpv30";
+const firebaseConfig = {
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
 /* =========================================================
    PASSWORD SEDERHANA
@@ -731,8 +718,10 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const LEADER_PASSWORD = "leader1234";
 const ADMIN_PASSWORD = "admin1234";
 
-const isConfigured = SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY";
-const sb = isConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const isConfigured = firebaseConfig.apiKey !== "YOUR_FIREBASE_API_KEY" && firebaseConfig.projectId !== "YOUR_PROJECT_ID";
+if(isConfigured){ firebase.initializeApp(firebaseConfig); }
+const db = isConfigured ? firebase.firestore() : null;
+const COLLECTION = "overtime_records";
 
 const DEPARTMENTS = ["Production","Part Control","CMC","Engineering","PE","Maintenance","PQA Incoming","PQA Outgoing","Main Office"];
 const DEPT_COLORS = {
@@ -756,7 +745,8 @@ function fmtDateDisplay(iso){
   return `${d}/${m}/${y}`;
 }
 function fmtDateTime(ts){
-  const d = new Date(ts);
+  if(!ts) return "-";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
   return fmtDateDisplay(d.toISOString().slice(0,10)) + " " + String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
 }
 function escapeHtml(str){
@@ -904,7 +894,7 @@ const confirmText = document.getElementById("confirmText");
 const leaderPasswordInput = document.getElementById("leaderPasswordInput");
 
 submitBtn.onclick = () => {
-  if(!isConfigured){ showToast("Supabase belum dikonfigurasi."); return; }
+  if(!isConfigured){ showToast("Firebase belum dikonfigurasi."); return; }
   if(!dateInput.value){ showToast("Date wajib diisi."); return; }
   if(!departmentInput.value){ showToast("Department wajib diisi."); return; }
   for(const e of employees){
@@ -945,10 +935,15 @@ document.getElementById("confirmSubmit").onclick = async () => {
       start_time: e.startTime,
       end_time: e.endTime,
       overtime_hour: parseFloat(e.overtime),
-      remark: e.remark.trim() || null
+      remark: e.remark.trim() || null,
+      submitted_at: firebase.firestore.FieldValue.serverTimestamp()
     }));
-    const { error } = await sb.from("overtime_records").insert(payload);
-    if(error) throw error;
+    const batch = db.batch();
+    payload.forEach(record => {
+      const docRef = db.collection(COLLECTION).doc();
+      batch.set(docRef, record);
+    });
+    await batch.commit();
     const totalEmployee = payload.length;
     const totalHour = Math.round(payload.reduce((s,e)=>s+e.overtime_hour,0)*100)/100;
     showToast(`Data overtime berhasil disimpan. ${totalEmployee} employee, total ${totalHour} overtime hours.`, 3500);
@@ -995,12 +990,18 @@ let currentRecords = [];
 async function loadAdminData(){
   if(!isConfigured) return;
   try{
-    let query = sb.from("overtime_records").select("*").order("submitted_at", { ascending:false });
-    if(filterDate.value) query = query.eq("overtime_date", filterDate.value);
-    if(filterDepartment.value) query = query.eq("department", filterDepartment.value);
-    const { data, error } = await query;
-    if(error) throw error;
-    let rows = data || [];
+    // Sengaja cuma filter by Date di query Firestore (kalau diisi), lalu
+    // Department dan Search disaring di sisi browser. Ini menghindari
+    // kebutuhan "composite index" di Firestore yang harus dibuat manual
+    // kalau kita filter lebih dari satu field sekaligus di query.
+    let queryRef = db.collection(COLLECTION);
+    if(filterDate.value) queryRef = queryRef.where("overtime_date", "==", filterDate.value);
+    const snapshot = await queryRef.get();
+    let rows = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    if(filterDepartment.value){
+      rows = rows.filter(r => r.department === filterDepartment.value);
+    }
     const search = filterSearch.value.trim().toLowerCase();
     if(search){
       rows = rows.filter(r =>
@@ -1008,6 +1009,12 @@ async function loadAdminData(){
         (r.npk || "").toLowerCase().includes(search)
       );
     }
+    rows.sort((a,b) => {
+      const aTime = a.submitted_at && a.submitted_at.toMillis ? a.submitted_at.toMillis() : 0;
+      const bTime = b.submitted_at && b.submitted_at.toMillis ? b.submitted_at.toMillis() : 0;
+      return bTime - aTime;
+    });
+
     currentRecords = rows;
     renderAdminTable(rows);
     renderAdminSummary(rows);
@@ -1130,7 +1137,7 @@ document.getElementById("saveEdit").onclick = async () => {
   saveBtn.disabled = true;
   saveBtn.textContent = "Menyimpan...";
   try{
-    const { error } = await sb.from("overtime_records").update({
+    await db.collection(COLLECTION).doc(editingId).update({
       overtime_date: date,
       department: department,
       name: name,
@@ -1139,8 +1146,7 @@ document.getElementById("saveEdit").onclick = async () => {
       end_time: end || null,
       overtime_hour: parseFloat(overtime),
       remark: remark || null
-    }).eq("id", editingId);
-    if(error) throw error;
+    });
     editModal.style.display = "none";
     showToast("Data berhasil diperbarui.");
     loadAdminData();
@@ -1168,8 +1174,7 @@ document.getElementById("confirmDelete").onclick = async () => {
   btn.disabled = true;
   btn.textContent = "Menghapus...";
   try{
-    const { error } = await sb.from("overtime_records").delete().eq("id", deletingId);
-    if(error) throw error;
+    await db.collection(COLLECTION).doc(deletingId).delete();
     deleteModal.style.display = "none";
     showToast("Data berhasil dihapus.");
     loadAdminData();
