@@ -751,7 +751,7 @@ const firebaseConfig = {
 const LEADER_PASSWORD = "leader1234";
 const ADMIN_PASSWORD = "admin1234";
 
-const isConfigured = firebaseConfig.apiKey !== "AIzaSyAkli_B1d8hEfBvUXZTzqP3va25HABwURM" && firebaseConfig.projectId !== "wm-overtime-19955";
+const isConfigured = firebaseConfig.apiKey !== "YOUR_FIREBASE_API_KEY" && firebaseConfig.projectId !== "YOUR_PROJECT_ID";
 if(isConfigured){ firebase.initializeApp(firebaseConfig); }
 const db = isConfigured ? firebase.firestore() : null;
 const COLLECTION = "overtime_records";
