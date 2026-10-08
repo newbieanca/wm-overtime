@@ -427,6 +427,38 @@
   .modal-actions button{flex:1;}
   .hidden{display:none !important;}
 
+  /* Autocomplete nama karyawan */
+  .name-wrap{position:relative;}
+  .suggest-list{
+    position:absolute;left:0;right:0;top:calc(100% + 4px);
+    background:var(--surface-alt);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    max-height:230px;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    z-index:40;
+    box-shadow:0 12px 30px rgba(0,0,0,.45);
+    display:none;
+  }
+  .suggest-item{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:13px;
+    font-size:14.5px;
+    cursor:pointer;
+    border-bottom:1px solid var(--border);
+  }
+  .suggest-item:last-child{border-bottom:none;}
+  .suggest-item:active,.suggest-item.active{background:rgba(255,107,91,.14);}
+  .suggest-item .s-npk{color:var(--text-muted);font-size:12.5px;white-space:nowrap;}
+  .suggest-empty{padding:13px;font-size:13px;color:var(--text-muted);line-height:1.4;}
+  .name-status{font-size:11.5px;margin-top:6px;min-height:14px;}
+  .name-status.ok{color:var(--green);}
+  .name-status.warn{color:var(--yellow);}
+  input[readonly]{background:var(--surface);color:var(--text-muted);}
+  .master-status{font-size:11.5px;color:var(--text-faint);margin:-4px 2px 10px;}
+  #confirmText{white-space:pre-line;}
+
   /* Extra tightening for small phones */
   @media(max-width:380px){
     header.top{padding:16px 14px 12px;}
@@ -477,6 +509,7 @@
     </div>
 
     <p class="section-title">Employee Overtime</p>
+    <p class="master-status" id="masterStatus"></p>
     <div id="employeeList"></div>
     <button class="add-btn" id="addEmployeeBtn">+ Tambah Karyawan</button>
 
@@ -700,14 +733,13 @@
       dari aplikasi ini.
 ========================================================= */
 const firebaseConfig = {
-  apiKey: "AIzaSyAkli_B1d8hEfBvUXZTzqP3va25HABwURM",
-  authDomain: "wm-overtime-19955.firebaseapp.com",
-  projectId: "wm-overtime-19955",
-  storageBucket: "wm-overtime-19955.firebasestorage.app",
-  messagingSenderId: "949611047037",
-  appId: "1:949611047037:web:34a409a63d6df286a8a914"
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
-
 
 /* =========================================================
    PASSWORD SEDERHANA
@@ -723,6 +755,210 @@ const isConfigured = firebaseConfig.apiKey !== "YOUR_FIREBASE_API_KEY" && fireba
 if(isConfigured){ firebase.initializeApp(firebaseConfig); }
 const db = isConfigured ? firebase.firestore() : null;
 const COLLECTION = "overtime_records";
+
+/* =========================================================
+   AUTOCOMPLETE NAMA KARYAWAN (dari Google Sheet)
+
+   1. Di Google Sheet daftar karyawan, baris 1 harus header dengan
+      kolom "Nama" dan "NPK" (urutan bebas, kolom "Status" opsional).
+   2. File > Share > Publish to web > pilih sheet/tab daftar karyawan
+      (bukan "Entire document") > format "CSV" > Publish.
+   3. Salin link yang muncul, tempel di EMPLOYEE_CSV_URL di bawah ini.
+========================================================= */
+const EMPLOYEE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRF--ha0vNFaBsbB7H_UKqb5VhOjKpGDzUr1EpUc-_su3cgxGFU90BqtdHB6yaBflS3-tug9Q04RyF5/pub?gid=857812791&single=true&output=csv";
+// false = nama di luar daftar tetap boleh disubmit (hanya diberi peringatan)
+// true  = submit diblokir kalau ada nama yang tidak dipilih dari daftar
+const REQUIRE_NAME_FROM_LIST = false;
+
+const MASTER_CACHE_KEY = "wm_employee_master_v1";
+let masterEmployees = [];
+
+function parseCSV(text){
+  const rows = [];
+  let row = [], cur = "", inQ = false;
+  for(let i = 0; i < text.length; i++){
+    const c = text[i];
+    if(inQ){
+      if(c === '"'){
+        if(text[i+1] === '"'){ cur += '"'; i++; } else inQ = false;
+      }else cur += c;
+    }else{
+      if(c === '"') inQ = true;
+      else if(c === ","){ row.push(cur); cur = ""; }
+      else if(c === "\n" || c === "\r"){
+        if(c === "\r" && text[i+1] === "\n") i++;
+        row.push(cur); rows.push(row); row = []; cur = "";
+      }else cur += c;
+    }
+  }
+  if(cur !== "" || row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+
+function parseEmployeeCSV(text){
+  const rows = parseCSV(text.replace(/^\uFEFF/, ""));
+  if(!rows.length) return [];
+  const header = rows[0].map(h => h.trim().toLowerCase());
+  let nameIdx = header.findIndex(h => h.includes("nama") || h === "name");
+  let npkIdx = header.findIndex(h => h.includes("npk"));
+  let statusIdx = header.findIndex(h => h === "status");
+  let start = 1;
+  if(nameIdx < 0 || npkIdx < 0){ nameIdx = 0; npkIdx = 1; statusIdx = -1; start = 0; }
+  const inactive = ["inactive","nonaktif","non-aktif","non aktif","resign","keluar"];
+  const seen = new Set();
+  const list = [];
+  for(let i = start; i < rows.length; i++){
+    const r = rows[i];
+    const name = (r[nameIdx] || "").trim().replace(/\s+/g, " ").toUpperCase();
+    const npk = (r[npkIdx] || "").trim();
+    if(!name) continue;
+    if(statusIdx >= 0 && inactive.includes((r[statusIdx] || "").trim().toLowerCase())) continue;
+    const key = name + "|" + npk;
+    if(seen.has(key)) continue;
+    seen.add(key);
+    list.push({ name, npk });
+  }
+  return list;
+}
+
+function searchMaster(q){
+  const tokens = q.toUpperCase().split(/\s+/).filter(Boolean);
+  if(!tokens.length) return [];
+  const res = masterEmployees.filter(p => {
+    const hay = p.name + " " + p.npk;
+    return tokens.every(t => hay.includes(t));
+  });
+  res.sort((a, b) => {
+    const as = a.name.startsWith(tokens[0]) ? 0 : 1;
+    const bs = b.name.startsWith(tokens[0]) ? 0 : 1;
+    return (as - bs) || a.name.localeCompare(b.name);
+  });
+  return res.slice(0, 8);
+}
+
+// kalau ketikan persis sama dengan satu-satunya nama di daftar, anggap terpilih
+function resolveExact(emp){
+  if(emp.fromList || !masterEmployees.length) return;
+  const name = emp.name.trim().replace(/\s+/g, " ").toUpperCase();
+  const hits = masterEmployees.filter(p => p.name === name);
+  if(hits.length === 1){
+    emp.name = hits[0].name;
+    emp.npk = hits[0].npk;
+    emp.fromList = true;
+  }
+}
+
+function setMasterStatus(text){
+  const el = document.getElementById("masterStatus");
+  if(el) el.textContent = text;
+}
+
+async function loadMaster(){
+  let cached = false;
+  try{
+    const c = JSON.parse(localStorage.getItem(MASTER_CACHE_KEY));
+    if(c && Array.isArray(c.list) && c.list.length){ masterEmployees = c.list; cached = true; }
+  }catch(e){}
+  if(cached) setMasterStatus(`Daftar karyawan: ${masterEmployees.length} nama`);
+
+  if(!EMPLOYEE_CSV_URL || EMPLOYEE_CSV_URL.startsWith("PASTE_")){
+    if(!cached) setMasterStatus("Autocomplete nonaktif: link daftar karyawan belum diisi.");
+    return;
+  }
+  if(!cached) setMasterStatus("Memuat daftar karyawan...");
+  try{
+    const sep = EMPLOYEE_CSV_URL.includes("?") ? "&" : "?";
+    const res = await fetch(EMPLOYEE_CSV_URL + sep + "t=" + Date.now(), { cache: "no-store" });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const list = parseEmployeeCSV(await res.text());
+    if(!list.length) throw new Error("Daftar kosong atau kolom Nama/NPK tidak ditemukan");
+    masterEmployees = list;
+    try{ localStorage.setItem(MASTER_CACHE_KEY, JSON.stringify({ list, at: Date.now() })); }catch(e){}
+    setMasterStatus(`Daftar karyawan: ${list.length} nama`);
+  }catch(err){
+    console.error(err);
+    setMasterStatus(cached
+      ? `Daftar karyawan: ${masterEmployees.length} nama (memakai data tersimpan)`
+      : "Gagal memuat daftar karyawan. Nama bisa diketik manual.");
+  }
+}
+
+function setupAutocomplete(row, emp){
+  const nameInp = row.querySelector('[data-field="name"]');
+  const npkInp = row.querySelector('[data-field="npk"]');
+  const list = row.querySelector(".suggest-list");
+  const status = row.querySelector(".name-status");
+  let items = [], activeIdx = -1;
+
+  function setStatus(){
+    const v = emp.name.trim();
+    if(!masterEmployees.length || !v){ status.textContent = ""; status.className = "name-status"; return; }
+    if(emp.fromList){ status.textContent = "✓ Dipilih dari daftar karyawan"; status.className = "name-status ok"; }
+    else{ status.textContent = "⚠ Nama belum dipilih dari daftar"; status.className = "name-status warn"; }
+  }
+  function hide(){ list.style.display = "none"; activeIdx = -1; }
+  function choose(p){
+    emp.name = p.name; emp.npk = p.npk; emp.fromList = true;
+    nameInp.value = p.name;
+    npkInp.value = p.npk;
+    npkInp.readOnly = true;
+    hide(); setStatus(); updateTotals();
+  }
+  function highlight(){
+    Array.from(list.children).forEach((el, i) => el.classList.toggle("active", i === activeIdx));
+    const el = list.children[activeIdx];
+    if(el && el.scrollIntoView) el.scrollIntoView({ block: "nearest" });
+  }
+  function render(){
+    document.querySelectorAll(".suggest-list").forEach(l => { if(l !== list) l.style.display = "none"; });
+    const q = nameInp.value.trim();
+    if(!masterEmployees.length || !q){ hide(); return; }
+    items = searchMaster(q);
+    list.innerHTML = "";
+    if(!items.length){
+      list.innerHTML = '<div class="suggest-empty">Tidak ditemukan di daftar. Periksa ejaan atau hubungi Admin.</div>';
+    }else{
+      items.forEach(p => {
+        const it = document.createElement("div");
+        it.className = "suggest-item";
+        it.innerHTML = `<span>${escapeHtml(p.name)}</span><span class="s-npk">${escapeHtml(p.npk)}</span>`;
+        it.addEventListener("click", () => choose(p));
+        list.appendChild(it);
+      });
+    }
+    list.style.display = "block";
+    activeIdx = -1;
+  }
+
+  // dipasang SETELAH listener uppercase di renderEmployees, jadi emp.name sudah huruf besar
+  nameInp.addEventListener("input", () => {
+    if(emp.fromList){
+      emp.fromList = false;
+      if(npkInp.readOnly){ npkInp.readOnly = false; npkInp.value = ""; emp.npk = ""; }
+    }
+    render(); setStatus();
+  });
+  nameInp.addEventListener("focus", () => {
+    if(nameInp.value.trim() && !emp.fromList) render();
+    setTimeout(() => { if(nameInp.scrollIntoView) nameInp.scrollIntoView({ block: "center", behavior: "smooth" }); }, 250);
+  });
+  nameInp.addEventListener("keydown", e => {
+    if(list.style.display !== "block" || !items.length) return;
+    if(e.key === "ArrowDown"){ e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); highlight(); }
+    else if(e.key === "ArrowUp"){ e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); highlight(); }
+    else if(e.key === "Enter" && activeIdx >= 0){ e.preventDefault(); choose(items[activeIdx]); }
+    else if(e.key === "Escape"){ hide(); }
+  });
+  setStatus();
+}
+
+// tutup daftar saran kalau menyentuh di luar kolom nama
+document.addEventListener("pointerdown", e => {
+  if(!e.target.closest(".name-wrap")){
+    document.querySelectorAll(".suggest-list").forEach(l => l.style.display = "none");
+  }
+});
+
 
 const DEPARTMENTS = ["Production","Part Control","CMC","Engineering","PE","Maintenance","PQA Incoming","PQA Outgoing","Main Office"];
 const DEPT_COLORS = {
@@ -812,7 +1048,7 @@ departmentInput.addEventListener("change", () => {
 
 function addEmployee(){
   empSeq++;
-  employees.push({ uid: empSeq, name:"", npk:"", startTime:"", endTime:"", overtime:"", remark:"" });
+  employees.push({ uid: empSeq, name:"", npk:"", fromList:false, startTime:"", endTime:"", overtime:"", remark:"" });
   renderEmployees();
 }
 
@@ -834,12 +1070,16 @@ function renderEmployees(){
       <div class="emp-badge">Employee ${idx+1}</div>
       <div class="field">
         <label>Nama <span class="req">*</span></label>
-        <input type="text" placeholder="Nama karyawan" data-field="name" value="${escapeHtml(emp.name)}" style="text-transform:uppercase;">
+        <div class="name-wrap">
+          <input type="text" placeholder="Ketik nama karyawan" data-field="name" autocomplete="off" autocapitalize="characters" value="${escapeHtml(emp.name)}" style="text-transform:uppercase;">
+          <div class="suggest-list"></div>
+        </div>
+        <div class="name-status"></div>
       </div>
       <div class="row-2">
         <div class="field">
           <label>NPK</label>
-          <input type="text" placeholder="Opsional" data-field="npk" value="${escapeHtml(emp.npk)}">
+          <input type="text" placeholder="Otomatis / opsional" data-field="npk" value="${escapeHtml(emp.npk)}" ${emp.fromList ? "readonly" : ""}>
         </div>
         <div class="field">
           <label>Remark</label>
@@ -873,6 +1113,7 @@ function renderEmployees(){
       });
     });
     row.querySelector(".remove-btn").addEventListener("click", () => removeEmployee(emp.uid));
+    setupAutocomplete(row, emp);
     employeeList.appendChild(row);
   });
   updateTotals();
@@ -898,6 +1139,9 @@ submitBtn.onclick = () => {
   if(!isConfigured){ showToast("Firebase belum dikonfigurasi."); return; }
   if(!dateInput.value){ showToast("Date wajib diisi."); return; }
   if(!departmentInput.value){ showToast("Department wajib diisi."); return; }
+  const beforeResolve = employees.map(e => e.fromList);
+  employees.forEach(resolveExact);
+  if(employees.some((e, i) => e.fromList !== beforeResolve[i])) renderEmployees();
   for(const e of employees){
     if(!e.name.trim()){ showToast("Nama wajib diisi untuk semua karyawan."); return; }
     if(!e.startTime || !e.endTime){ showToast("Start OT dan End OT wajib diisi untuk semua karyawan."); return; }
@@ -908,7 +1152,14 @@ submitBtn.onclick = () => {
   }
   const totalEmployee = employees.length;
   const totalHour = Math.round(employees.reduce((sum,e) => sum + (parseFloat(e.overtime) || 0), 0)*100)/100;
-  confirmText.textContent = `Submit ${totalEmployee} employee dengan total ${totalHour} jam overtime?`;
+  const unlisted = masterEmployees.length ? employees.filter(e => !e.fromList).length : 0;
+  if(unlisted > 0 && REQUIRE_NAME_FROM_LIST){
+    showToast(`${unlisted} nama belum dipilih dari daftar. Pilih dari saran yang muncul saat mengetik.`, 3500);
+    return;
+  }
+  let msg = `Submit ${totalEmployee} employee dengan total ${totalHour} jam overtime?`;
+  if(unlisted > 0) msg += `\n\n⚠ ${unlisted} nama tidak dipilih dari daftar karyawan.`;
+  confirmText.textContent = msg;
   leaderPasswordInput.value = "";
   confirmModal.style.display = "flex";
   setTimeout(() => leaderPasswordInput.focus(), 50);
@@ -1213,6 +1464,7 @@ document.getElementById("downloadBtn").onclick = () => {
 };
 
 /* ---------- Init ---------- */
+loadMaster();
 if(!isConfigured){
   document.getElementById("configWarning").classList.remove("hidden");
   submitBtn.disabled = true;
